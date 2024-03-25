@@ -1,0 +1,28 @@
+<workers>
+    <worker>
+        <name>John Doe</name>
+        <coordinates>
+            <x>100</x>
+            <y>200.5</y>
+        </coordinates>
+        <creationDate>2024-02-26</creationDate>
+        <salary>3000.0</salary>
+        <startDate>2024-02-05T08:00:00</startDate>
+        <position>DEVELOPER</position>
+        <status>HIRED</status>
+        <organization>
+            <fullName>Aaaaaaa</fullName>
+            <type>COMMERCIAL</type>
+            <postalAddress>
+                <zipCode>12345</zipCode>
+                <town>
+                    <y>75</y>
+                    <x>50.5</x>
+                    <z>0.0</z>
+                    <name>City</name>
+                </town>
+            </postalAddress>
+        </organization>
+        <Id>1</Id>
+    </worker>
+</workers>

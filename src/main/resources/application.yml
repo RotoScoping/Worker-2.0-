@@ -1,0 +1,9 @@
+server:
+  port: 9000
+  servlet:
+    context-path: /worker
+spring:
+  messages:
+    basename: validation_messages
+    encoding: UTF-8
+    fallback-to-system-locale: false
