@@ -21,12 +21,17 @@ public class UpdateCommand implements ICommand {
 
     @Override
     public String execute(String... args) {
-        if (args.length < 1)
+        if (args.length < 2)
             return "Пожалуйста укажите id обновляемого воркера!";
         if (!ConsoleHelper.isNumeric(args[1]))
             return "Пожалуйста укажите целое число в аргументе!";
         Worker worker = ConsoleHelper.getWorker();
         worker.setId(Integer.parseInt(args[1]));
         return service.update(worker);
+    }
+
+    @Override
+    public String toString() {
+        return "update_id {worker} -->  обновить значение элемента коллекции, id которого равен заданному";
     }
 }

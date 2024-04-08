@@ -3,7 +3,12 @@ package core.command;
 /**
  * Интерфейс команды, содержащий метод выполнения команды -execute()
  */
-
 public interface ICommand {
-        String execute(String... args);
+    /**
+     * Execute string.
+     *
+     * @param args the args
+     * @return the string
+     */
+    String execute(String... args);
 }

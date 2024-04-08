@@ -14,13 +14,13 @@ import java.util.logging.Level;
 /**
  * The entry point of lab application
  */
-
 public class Main {
 
     private static final AsyncLogger logger = AsyncLogger.get();
 
     /**
      * The Main method, that reads the user's input
+     *
      * @param args the input arguments
      */
     public static void main(String[] args)

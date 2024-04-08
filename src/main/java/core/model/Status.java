@@ -2,8 +2,9 @@ package core.model;
 
 /**
  * Worker's status in organization.
- *  @author Mark Kriger
- *  @since 15/02/2024
+ *
+ * @author Mark Kriger
+ * @since 15 /02/2024
  */
 public enum Status {
     /**

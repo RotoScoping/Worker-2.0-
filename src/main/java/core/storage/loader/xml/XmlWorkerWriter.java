@@ -6,16 +6,28 @@ import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamWriter;
 import java.util.Collection;
 
+/**
+ * The type Xml worker writer.
+ */
 public class XmlWorkerWriter {
 
     private XMLStreamWriter writer;
     private Collection<Worker> workers;
 
+    /**
+     * Instantiates a new Xml worker writer.
+     *
+     * @param writer  the writer
+     * @param workers the workers
+     */
     public XmlWorkerWriter(XMLStreamWriter writer, Collection<Worker> workers) {
         this.writer = writer;
         this.workers = workers;
     }
 
+    /**
+     * Map.
+     */
     public void map() {
         try {
             writer.writeStartDocument("UTF-8", "1.0");

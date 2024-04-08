@@ -20,6 +20,6 @@ public class MaxConstraint implements ConstraintValidator<Max, Number> {
             return true;
         }
 
-        return value.longValue() <= maxValue;
+        return value.doubleValue() <= maxValue;
     }
 }

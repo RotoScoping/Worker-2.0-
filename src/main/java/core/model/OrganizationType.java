@@ -3,8 +3,9 @@ package core.model;
 
 /**
  * The enum Organization type.
- *  @author Mark Kriger
- *  @since 15/02/2024
+ *
+ * @author Mark Kriger
+ * @since 15 /02/2024
  */
 public enum OrganizationType {
     /**

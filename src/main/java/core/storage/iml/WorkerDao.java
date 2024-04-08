@@ -1,15 +1,16 @@
 package core.storage.iml;
 
+import core.logger.AsyncLogger;
 import core.model.Worker;
 import core.storage.AuditableCrud;
 import core.storage.loader.ILoader;
-import core.storage.loader.iml.FileLoader;
+import core.storage.loader.impl.FileLoader;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.logging.Level;
 
 
 /**
@@ -17,7 +18,7 @@ import java.util.Queue;
  */
 public class WorkerDao implements AuditableCrud<Integer, Worker> {
 
-
+    private static final AsyncLogger logger = AsyncLogger.get();
     private static final WorkerDao INSTANCE = new WorkerDao(new FileLoader());
     private final Collection<Worker> storage;
 
@@ -64,10 +65,11 @@ public class WorkerDao implements AuditableCrud<Integer, Worker> {
      * @param worker the worker
      */
     public void add(Worker worker) {
-        worker.setId(storage.size()+1);
+        int id = storage.size()+1;
+        logger.log(Level.INFO, String.format("Добавление сотрудника c id = %d", id));
+        worker.setId(id);
         worker.setCreationDate(LocalDate.now());
         storage.add(worker);
-
     }
 
     /**
@@ -88,6 +90,7 @@ public class WorkerDao implements AuditableCrud<Integer, Worker> {
      * @return boolean result of operation
      */
     public boolean update(Worker worker) {
+
         for (Worker el : storage) {
             if (el.getId() == worker.getId()) {
                 removeById(worker.getId());

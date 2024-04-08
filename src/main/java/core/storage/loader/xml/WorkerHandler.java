@@ -23,6 +23,11 @@ public class WorkerHandler extends DefaultHandler {
     private StringBuilder elementValue = new StringBuilder();
     private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.ENGLISH);
 
+    /**
+     * Gets workers.
+     *
+     * @return the workers
+     */
     public List<Worker> getWorkers() {
         return workers;
     }

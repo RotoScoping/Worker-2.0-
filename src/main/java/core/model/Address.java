@@ -15,10 +15,10 @@ import core.validation.annotations.NotNull;
  *     <li> zipCode - not null</li>
  *     <li> town - not null</li>
  * </ul>
- *  @author Mark Kriger
- *  @since 15/02/2024
+ *
+ * @author Mark Kriger
+ * @since 15 /02/2024
  */
-
 public class Address {
 
     @NotNull
@@ -29,33 +29,68 @@ public class Address {
 
     private Address() {}
 
+    /**
+     * Builder builder.
+     *
+     * @return the builder
+     */
     public static Builder builder() {
         return new Address().new Builder();
     }
 
+    /**
+     * Gets zip code.
+     *
+     * @return the zip code
+     */
     public String getZipCode() {
         return zipCode;
     }
 
+    /**
+     * Gets town.
+     *
+     * @return the town
+     */
     public Location getTown() {
         return town;
     }
 
+    /**
+     * The type Builder.
+     */
     public class Builder {
 
         private Builder(){}
 
+        /**
+         * Zip code builder.
+         *
+         * @param zipCode the zip code
+         * @return the builder
+         */
         public Builder zipCode(String zipCode) {
             Address.this.zipCode = zipCode;
             return this;
         }
 
+        /**
+         * Town builder.
+         *
+         * @param town the town
+         * @return the builder
+         */
         public Builder town(Location town) {
             Address.this.town = town;
             return this;
         }
 
 
+        /**
+         * Build address.
+         *
+         * @return the address
+         */
         public Address build() {
             return Address.this;
         }

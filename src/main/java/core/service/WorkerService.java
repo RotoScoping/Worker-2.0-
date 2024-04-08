@@ -4,7 +4,7 @@ import core.model.Organization;
 import core.model.Worker;
 import core.storage.AuditableCrud;
 import core.storage.iml.WorkerDao;
-import core.storage.loader.iml.FileLoader;
+import core.storage.loader.impl.FileLoader;
 import core.validation.annotations.basic.validator.Validator;
 
 import java.util.*;
@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 /**
  * The type Worker service.
  */
-
 public class WorkerService {
 
     private final Validator validator;
@@ -25,7 +24,8 @@ public class WorkerService {
     /**
      * Instantiates a new Worker service.
      *
-     * @param dao the dao
+     * @param dao       the dao
+     * @param validator the validator
      */
     public WorkerService(AuditableCrud<Integer, Worker> dao, Validator validator) {
         this.validator = validator;
@@ -54,7 +54,7 @@ public class WorkerService {
     }
 
     /**
-     * Add string.
+     * Add worker in collection .
      *
      * @param worker the worker
      * @return A string describing the success or failure of the operation
@@ -83,7 +83,7 @@ public class WorkerService {
     }
 
     /**
-     * Method thar .
+     * Method that update worker in collection  .
      *
      * @param worker the worker
      * @return A string describing the success or failure of the operation
@@ -232,6 +232,11 @@ public class WorkerService {
                 .collect(Collectors.joining("\n"));
     }
 
+    /**
+     * Gets instance.
+     *
+     * @return the instance
+     */
     public static WorkerService getInstance() {
         return INSTANCE;
     }

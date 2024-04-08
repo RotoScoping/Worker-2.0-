@@ -5,6 +5,7 @@ import core.logger.AsyncLogger;
 import core.service.WorkerService;
 
 import java.util.logging.Level;
+
 /**
  * Класс, представляющий команду info
  */
@@ -24,4 +25,10 @@ public class InfoCommand implements ICommand{
         logger.log(Level.INFO, "Исполнение команды: info");
         return service.info();
     }
+
+    @Override
+    public String toString() {
+        return "info --> вывести в стандартный поток вывода информацию о коллекции";
+    }
+
 }

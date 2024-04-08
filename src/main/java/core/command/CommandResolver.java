@@ -42,8 +42,10 @@ public class CommandResolver {
 
 
     /**
-     * Метод который проверяет, что строка корректно переводится в цел.число
-     * @return boolean
+     * Метод который резолвит команду
+     *
+     * @param command the command
+     * @return boolean command
      */
     public static ICommand get (String command) {
         logger.log(Level.INFO, "Разрешение " + command + "команды в списке доступных команд");
@@ -55,7 +57,9 @@ public class CommandResolver {
     /**
      * Метод который добавляет абсолютный путь запущенного скрипта во множество, которое не допускает дублей
      * Это позволяет затрекать циклические вызовы
-     * @return boolean
+     *
+     * @param currentScriptAbsolutePath the current script absolute path
+     * @return boolean flag that indicates recursive invoke
      */
     public static boolean setCurrentScript(String currentScriptAbsolutePath) {
         logger.log(Level.INFO, "Добавление пути " + currentScriptAbsolutePath + " скрипта в трекер");

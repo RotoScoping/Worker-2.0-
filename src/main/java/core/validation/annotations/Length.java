@@ -16,6 +16,17 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface Length {
+    /**
+     * Value long.
+     *
+     * @return the long
+     */
     long value();
+
+    /**
+     * Message string.
+     *
+     * @return the string
+     */
     String message() default "Поле {field} не должно быть более {length} символов";
 }

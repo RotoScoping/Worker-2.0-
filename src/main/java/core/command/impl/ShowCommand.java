@@ -2,6 +2,7 @@ package core.command.impl;
 
 import core.command.ICommand;
 import core.service.WorkerService;
+
 /**
  * Класс , представляющий команду для вывода всех Worker в строком представлении
  */
@@ -18,5 +19,10 @@ public class ShowCommand implements ICommand {
     @Override
     public String execute(String... args) {
         return service.show();
+    }
+
+    @Override
+    public String toString() {
+        return "show --> вывести в стандартный поток вывода все элементы коллекции в строковом представлении";
     }
 }

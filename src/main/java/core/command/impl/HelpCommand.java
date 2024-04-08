@@ -4,16 +4,22 @@ import core.command.ICommand;
 import core.logger.AsyncLogger;
 
 import java.util.logging.Level;
+
 /**
  * Класс, который представляет команду help.
  */
 public class HelpCommand implements ICommand {
 
     private static final AsyncLogger logger = AsyncLogger.get();
+
+    /**
+     * Method that returns help-info.
+     * @return A string with help information
+     */
     @Override
     public String execute(String... args) {
         logger.log(Level.INFO, "Исполнение команды: help");
-        return """
+        return String.format("""
 
                 CLI помогает вам взаимодействовать с сервисом Worker
 
@@ -23,36 +29,36 @@ public class HelpCommand implements ICommand {
 
                 Commands:
 
-                \thelp --> вывести справку по доступным командам
+                \t%s
 
-                \tinfo --> вывести в стандартный поток вывода информацию о коллекции
+                \t%s
 
-                \tshow --> вывести в стандартный поток вывода все элементы коллекции в строковом представлении
+                \t%s
 
-                \tadd {worker} --> добавить новый элемент в коллекцию (worker add -help for more details)
+                \t%s
 
-                \tupdate_id {worker} -->  обновить значение элемента коллекции, id которого равен заданному
+                \t%s
 
-                \tremove_by_id {id} --> удалить элемент из коллекции по его id
+                \t%s
 
-                \tclear --> очистить коллекцию
+                \t%s
 
-                \tsave --> сохранить коллекцию в файл
+                \t%s
 
-                \texecute_script {path} --> считать и исполнить скрипт из указанного файла.
+                \t%s
 
-                \texit --> завершить программу (без сохранения в файл)
+                \t%s
 
-                \tremove_first --> удалить первый элемент из коллекции
+                \t%s
 
-                \tadd_if_max {worker} --> добавить новый элемент в коллекцию, если его значение превышает значение наибольшего элемента этой коллекции
+                \t%s
 
-                \tadd_if_min {worker} --> добавить новый элемент в коллекцию, если его значение меньше, чем у наименьшего элемента этой коллекции
+                \t%s
 
-                \taverage_of_salary --> вывести среднее значение поля salary для всех элементов коллекции
+                \t%s
 
-                \tprint_field_ascending_status --> вывести значения поля status всех элементов в порядке возрастания
-
-                \tprint_field_descending_organization --> вывести значения поля organization всех элементов в порядке убывания""";
+                \t%s
+                
+                """, new InfoCommand(), new ShowCommand(), new AddCommand(),new UpdateCommand(), new RemoveByIdCommand(), new ClearCommand(), new SaveCommand(), new ExecuteScriptCommand(), new ExitCommand(), new RemoveFirstCommand(), new AddIfMaxCommand(), new AddIfMinCommand(), new AvarageOfSalaryCommand(), new PrintFieldAscendingStatus(), new PrintFieldDescendingOrganization());
     }
 }

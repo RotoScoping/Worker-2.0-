@@ -14,8 +14,9 @@ import core.validation.annotations.Length;
  * <ul>
  *     <li> fullName - name should not be longer 762</li>
  * </ul>
- *  @author Mark Kriger
- *  @since 15/02/2024
+ *
+ * @author Mark Kriger
+ * @since 15 /02/2024
  */
 public class Organization implements Comparable<Organization> {
 
@@ -30,29 +31,60 @@ public class Organization implements Comparable<Organization> {
 
     private Organization() {}
 
+    /**
+     * Builder builder.
+     *
+     * @return the builder
+     */
     public static Builder builder() {
         return new Organization().new Builder();
     }
 
+    /**
+     * The type Builder.
+     */
     public class Builder {
 
         private Builder(){}
 
+        /**
+         * Full name builder.
+         *
+         * @param fullName the full name
+         * @return the builder
+         */
         public Builder fullName(String fullName) {
             Organization.this.fullName = fullName;
             return this;
         }
 
+        /**
+         * Type builder.
+         *
+         * @param type the type
+         * @return the builder
+         */
         public Builder type(OrganizationType type) {
             Organization.this.type = type;
             return this;
         }
 
+        /**
+         * Postal address builder.
+         *
+         * @param postalAddress the postal address
+         * @return the builder
+         */
         public Builder postalAddress(Address postalAddress) {
             Organization.this.postalAddress = postalAddress;
             return this;
         }
 
+        /**
+         * Build organization.
+         *
+         * @return the organization
+         */
         public Organization build() {
             return Organization.this;
         }
@@ -72,14 +104,29 @@ public class Organization implements Comparable<Organization> {
         return o.fullName.compareTo(this.fullName);
     }
 
+    /**
+     * Gets full name.
+     *
+     * @return the full name
+     */
     public String getFullName() {
         return fullName;
     }
 
+    /**
+     * Gets type.
+     *
+     * @return the type
+     */
     public OrganizationType getType() {
         return type;
     }
 
+    /**
+     * Gets postal address.
+     *
+     * @return the postal address
+     */
     public Address getPostalAddress() {
         return postalAddress;
     }

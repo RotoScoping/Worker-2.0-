@@ -17,11 +17,22 @@ public class Validator {
 
     private final List<Class<?>> classes;
 
+    /**
+     * Instantiates a new Validator.
+     *
+     * @param pack the pack
+     */
     public Validator(String pack) {
         this.classes = PackageScan.getClasses(pack);
     }
 
 
+    /**
+     * Validate list.
+     *
+     * @param obj the obj
+     * @return the list
+     */
     public List<String> validate(Object obj) {
         List<String> errors = new ArrayList<>();
         Class<?> objClass = obj.getClass();

@@ -1,4 +1,4 @@
-package core.storage.loader.iml;
+package core.storage.loader.impl;
 
 import core.model.Worker;
 import core.storage.loader.ILoader;
@@ -18,17 +18,18 @@ import javax.xml.validation.Schema;
 import javax.xml.validation.SchemaFactory;
 import java.io.*;
 import java.util.Collection;
-import java.util.List;
-import java.util.PriorityQueue;
-import java.util.Queue;
+import java.util.Collections;
 
 /**
  * Implementation @see core.storage.loader.ILoader .
  * Класс, реализующий загрузка данных о Worker из xml файла и обратно в файл.
  */
 public class FileLoader implements ILoader<Collection<Worker>> {
-    private static final String XML_FILE_PATH = System.getProperty("file_path");
+    private static final String XML_FILE_PATH = System.getenv("file_path");
 
+    /**
+     * The constant XSD_SCHEMA_PATH.
+     */
     public static final String XSD_SCHEMA_PATH = "worker.xsd";
 
     /**
@@ -52,14 +53,14 @@ public class FileLoader implements ILoader<Collection<Worker>> {
 
     /**
      * Метод, выполнящий загрузку данных из xml используя SAX Parser
-     * @return the instance
+     * @return Collection of Workers
      */
     @Override
-    public Queue<Worker> load() {
+    public Collection<Worker> load() {
 
         SAXParserFactory factory = SAXParserFactory.newInstance();
         WorkerHandler mapper = new WorkerHandler();
-
+        if (XML_FILE_PATH == null) return Collections.emptyList();
         try (var isr = new InputStreamReader(FileLoader.class.getClassLoader().getResourceAsStream(XML_FILE_PATH))){
             SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
             Schema schema = schemaFactory.newSchema(FileLoader.class.getClassLoader().getResource(XSD_SCHEMA_PATH));
@@ -71,8 +72,8 @@ public class FileLoader implements ILoader<Collection<Worker>> {
             System.err.println("Произошла ошибка при чтении файла!");
         }
 
-        List<Worker> workers = mapper.getWorkers();
-        return new PriorityQueue<>(workers);
+        return mapper.getWorkers();
+
     }
 
 }

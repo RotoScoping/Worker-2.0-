@@ -2,6 +2,7 @@ package core.validation.annotations.basic.constraint.impl;
 
 import core.validation.annotations.NotNull;
 import core.validation.annotations.basic.constraint.ConstraintValidator;
+
 /**
  * Класс обработчик not null constraint
  */

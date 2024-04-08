@@ -16,5 +16,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface Positive {
+    /**
+     * Message string.
+     *
+     * @return the string
+     */
     String message() default "Значение поля {field} должно быть положительным";
 }

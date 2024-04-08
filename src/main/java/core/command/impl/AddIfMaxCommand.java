@@ -4,8 +4,9 @@ import core.command.ConsoleHelper;
 import core.command.ICommand;
 import core.model.Worker;
 import core.service.WorkerService;
+
 /**
- *  Класс, реализующий команду добавления пользователя в коллекцию если какой нибудь парам. больше чем у всех остальных.
+ * Класс, реализующий команду добавления пользователя в коллекцию если какой нибудь парам. больше чем у всех остальных.
  */
 public class AddIfMaxCommand implements ICommand {
     private final WorkerService service = WorkerService.getInstance();
@@ -22,5 +23,10 @@ public class AddIfMaxCommand implements ICommand {
     public String execute(String... args) {
         Worker worker = ConsoleHelper.getWorker();
         return service.addIfMaxSalary(worker);
+    }
+
+    @Override
+    public String toString() {
+        return "add_if_max {worker} --> добавить новый элемент в коллекцию, если его значение превышает значение наибольшего элемента этой коллекции";
     }
 }

@@ -19,6 +19,9 @@ import static java.time.format.DateTimeFormatter.ofPattern;
  * Класс, содержащий полезные функции интерактива с клиентом и считывания данных с консоли
  */
 public final class ConsoleHelper {
+    /**
+     * The constant DATE_FORMAT.
+     */
     public static final String DATE_FORMAT = "dd.MM.yyyy";
 
     private ConsoleHelper() {
@@ -26,7 +29,8 @@ public final class ConsoleHelper {
 
     /**
      * Метод который позволяет создать Worker в интерактивном консольном режиме
-     * @return worker
+     *
+     * @return worker worker
      */
     public static Worker getWorker() {
         Scanner sc = new Scanner(System.in);
@@ -37,18 +41,23 @@ public final class ConsoleHelper {
                 .trim());
         // зарплата воркера
         print("Введите зарплату воркера: ");
-        while (!sc.hasNextFloat()) {
-            print("Введите число с точкой: ");
-            sc.next();
-        }
-        worker.salary(sc.nextFloat());
+        float salary = 0;
+        do {
+            if (salary < 0) print("Зарплата должна быть положительной: ");
+            while (!sc.hasNextFloat()) {
+                print("Введите число с точкой: ");
+                sc.next();
+            }
+            salary = sc.nextFloat();
+        } while (!(salary > 0));
+        worker.salary(salary);
         sc.nextLine();
         // startDate - начало работы воркера
         System.out.printf("Введите когда воркер начал работу %s : ", DATE_FORMAT);
         String dateString = sc.nextLine()
                 .trim();
         while (!validateDate(dateString)) {
-            print("\nНекорректная дата, попробуйте еще раз: ");
+            print("Некорректная дата, попробуйте еще раз: ");
             dateString = sc.nextLine();
         }
 
@@ -89,44 +98,74 @@ public final class ConsoleHelper {
         worker.status(Status.valueOf(status));
 
         // Организация воркера
+        print("\nХотите ли вы ввести организацию воркера? (y/n): ");
+        String answer = sc.nextLine();
+        while (!(answer.equals("y") || answer.equals("n"))) {
+            print("\nХотите ли вы ввести организацию воркера? (y/n): ");
+            answer = sc.nextLine();
+        }
+        if (answer.equals("n")) return worker.build();
         worker.organization(getOrganization(sc));
-
         return worker.build();
 
     }
+
     /**
      * Метод который позволяет создать Coordinates в интерактивном консольном режиме
-     * @return coordinates
+     *
+     * @param sc the sc
+     * @return coordinates coordinates
      */
     public static Coordinates getCoordinates(Scanner sc) {
         print("Введите местоположение воркера:\n ");
         Coordinates.Builder coordinates = Coordinates.builder();
         print("Координата x: ");
         // x координата локации воркера
-        while (!sc.hasNextLong()) {
-            print("Введите целочисленный x: ");
-            sc.next();
-        }
-        coordinates.x(sc.nextLong());
+
+        long x = 0;
+        do {
+            if (x <= -977) print("Координата x должна быть не меньше -977, попробуйте еще раз: ");
+            while (!sc.hasNextLong()) {
+                print("Введите целочисленный x: ");
+                sc.next();
+            }
+            x = sc.nextLong();
+        } while (x <= -977);
+        coordinates.x(x);
         print("Координата y: ");
         // y координата локации воркера
-        while (!sc.hasNextDouble()) {
-            print("Введите вещественное число с точкой: ");
-            sc.next();
-        }
-        return coordinates.y(sc.nextDouble()).build();
+        double y = 887;
+        do {
+            if (y <= 886) print("Координата y должна быть меньше 886, попробуйте еще раз: ");
+            while (!sc.hasNextDouble()) {
+                print("Введите y c точкой: ");
+                sc.next();
+            }
+            y = sc.nextDouble();
+        } while (y >= 886);
+        coordinates.y(y);
+
+        return coordinates.build();
 
     }
+
     /**
      * Метод который позволяет создать Organization в интерактивном консольном режиме
-     * @return Organization
+     *
+     * @param sc the sc
+     * @return Organization organization
      */
     public static Organization getOrganization(Scanner sc) {
         Organization.Builder organization = Organization.builder();
         // имя организации
         print("Введите имя организации воркера: ");
-        organization.fullName(sc.nextLine()
-                .trim());
+        String name = sc.nextLine()
+                .trim();
+        while (!(name.length() <= 762)) {
+            print("Имя компании должно быть менее 762 символов");
+            name = sc.nextLine().trim();
+        }
+        organization.fullName(name);
         // тип организации
         System.out.printf("Введите тип организации (%s)", String.join(", ", Stream.of(OrganizationType.values())
                 .map(Enum::name)
@@ -144,9 +183,12 @@ public final class ConsoleHelper {
 
 
     }
+
     /**
      * Метод который позволяет создать Address в интерактивном консольном режиме
-     * @return Address
+     *
+     * @param sc the sc
+     * @return Address address
      */
     public static Address getAddress(Scanner sc) {
         Address.Builder address = Address.builder();
@@ -158,9 +200,12 @@ public final class ConsoleHelper {
                 .build();
 
     }
+
     /**
      * Метод который позволяет создать Location в интерактивном консольном режиме
-     * @return Location
+     *
+     * @param sc the sc
+     * @return Location location
      */
     public static Location getLocation(Scanner sc) {
         Location.Builder location = Location.builder();
@@ -193,9 +238,12 @@ public final class ConsoleHelper {
         return location.build();
 
     }
+
     /**
      * Метод который который пытается превратить строку в Position
-     * @return Position
+     *
+     * @param position the position
+     * @return Position position
      */
     public static Position validatePosition(String position) {
         try {
@@ -231,6 +279,11 @@ public final class ConsoleHelper {
     }
 
 
+    /**
+     * Print.
+     *
+     * @param text the text
+     */
     public static void print(String text) {
         System.out.print(text);
     }
@@ -248,9 +301,12 @@ public final class ConsoleHelper {
             return false;
         }
     }
+
     /**
      * Метод который проверяет, что строка корректно переводится в цел.число
-     * @return boolean
+     *
+     * @param str the str
+     * @return boolean boolean
      */
     public static boolean isNumeric(String str) {
         try {

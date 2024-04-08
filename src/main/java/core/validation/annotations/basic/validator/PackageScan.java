@@ -19,6 +19,12 @@ import java.util.logging.Level;
 public class PackageScan {
     private static final AsyncLogger logger = AsyncLogger.get();
 
+    /**
+     * Gets classes.
+     *
+     * @param packageName the package name
+     * @return the classes
+     */
     public static List<Class<?>> getClasses(String packageName)  {
         logger.log(Level.INFO, "Сканирование классов в пакете " + packageName);
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();

@@ -2,6 +2,7 @@ package core.command.impl;
 
 import core.command.ICommand;
 import core.service.WorkerService;
+
 /**
  * Класс, представляющий команду PrintFieldAscendingStatus, которая выводит статусы воркеров в порядке возрастания
  */
@@ -10,7 +11,6 @@ public class PrintFieldAscendingStatus implements ICommand {
 
     /**
      * Print field ascending status string.
-     *
      * @return string with status ASC sort
      */
 
@@ -19,5 +19,10 @@ public class PrintFieldAscendingStatus implements ICommand {
 
     public String execute(String... args) {
         return service.printFieldAscendingStatus();
+    }
+
+    @Override
+    public String toString() {
+        return "print_field_ascending_status --> вывести значения поля status всех элементов в порядке возрастания";
     }
 }

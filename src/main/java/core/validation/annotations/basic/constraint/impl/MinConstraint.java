@@ -20,6 +20,6 @@ public class MinConstraint implements ConstraintValidator<Min, Number> {
             return true;
         }
 
-        return value.longValue() >= minValue;
+        return value.doubleValue() >= minValue;
     }
 }

@@ -42,25 +42,28 @@ public class AsyncLogger {
     private void processQueue() {
         try {
             while (!shutdownRequested || !queue.isEmpty()) {
-                LogRecord record = queue.poll(); // Non-blocking
+                LogRecord record = queue.poll();
                 if (record != null) {
                     logger.log(record.getLevel(), record.getMessage());
                 } else {
-                    Thread.sleep(10); // Reduce CPU usage if queue is empty
+                    Thread.sleep(10);
                 }
             }
         } catch (InterruptedException e) {
             Thread.currentThread()
-                    .interrupt(); // Restore interrupted status
+                    .interrupt();
         }
     }
 
     /**
      * Внешний метод для логирования
+     *
+     * @param level   the level
+     * @param message the message
      */
     public void log(Level level, String message) {
         if (!shutdownRequested) {
-            queue.add(new LogRecord(level, message)); // Non-blocking
+            queue.add(new LogRecord(level, message));
         }
     }
 
@@ -72,7 +75,11 @@ public class AsyncLogger {
     }
 
 
-
+    /**
+     * Get async logger.
+     *
+     * @return the async logger
+     */
     public static AsyncLogger get() {
         return INSTANCE;
     }

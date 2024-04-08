@@ -7,6 +7,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 /**
  * Аннотация-метка для проверки поля на null.
  */
@@ -14,5 +15,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
 public @interface NotNull {
+    /**
+     * Message string.
+     *
+     * @return the string
+     */
     String message() default "Значение поля {name} не может быть null";
 }

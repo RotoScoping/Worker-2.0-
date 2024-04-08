@@ -3,8 +3,9 @@ package core.model;
 /**
  * A set of constants that specify the possible positions of the worker.
  * <br> Position - the vacancy for which the worker was accepted.
- *  @author Mark Kriger
- *  @since 15/02/2024
+ *
+ * @author Mark Kriger
+ * @since 15 /02/2024
  */
 public enum Position {
     /**
