@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xsd:schema xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+
+    <xsd:element name="workers">
+        <xsd:complexType>
+            <xsd:sequence>
+                <xsd:element name="worker" type="WorkerType" maxOccurs="unbounded"/>
+            </xsd:sequence>
+        </xsd:complexType>
+    </xsd:element>
+
+    <xsd:complexType name="WorkerType">
+        <xsd:sequence>
+            <xsd:element name="name">
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:string">
+                        <xsd:minLength value="1"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:element>
+            <xsd:element name="coordinates" type="Coordinates"/>
+            <xsd:element name="salary" type="xsd:decimal" minOccurs="0"/>
+            <xsd:element name="startDate" type="xsd:dateTime"/>
+            <xsd:element name="position" type="PositionEnum"/>
+            <xsd:element name="status" type="StatusEnum"/>
+            <xsd:element name="organization"  type="Organization" minOccurs="0"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="Coordinates">
+        <xsd:sequence>
+            <xsd:element name="x" type="xsd:long"/>
+            <xsd:element name="y" type="xsd:decimal"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="Organization">
+        <xsd:sequence>
+            <xsd:element name="fullName" type="xsd:string" minOccurs="0"/>
+            <xsd:element name="type" type="OrganizationEnum" minOccurs="0"/>
+            <xsd:element name="postalAddress" type="PostalAddress" minOccurs="0"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="PostalAddress">
+        <xsd:sequence>
+            <xsd:element name="zipCode" type="xsd:string"/>
+            <xsd:element name="town" type="TownType"/>
+        </xsd:sequence>
+    </xsd:complexType>
+
+    <xsd:complexType name="TownType">
+        <xsd:sequence>
+            <xsd:element name="x" type="xsd:decimal"/>
+            <xsd:element name="y" type="xsd:integer"/>
+            <xsd:element name="z" type="xsd:decimal"/>
+            <xsd:element name="name">
+                <xsd:simpleType>
+                    <xsd:restriction base="xsd:string">
+                        <xsd:minLength value="1"/>
+                    </xsd:restriction>
+                </xsd:simpleType>
+            </xsd:element>
+        </xsd:sequence>
+    </xsd:complexType>
+    <xsd:simpleType name="OrganizationEnum">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="COMMERCIAL"/>
+            <xsd:enumeration value="PUBLIC"/>
+            <xsd:enumeration value="GOVERNMENT"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="StatusEnum">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="FIRED"/>
+            <xsd:enumeration value="HIRED"/>
+            <xsd:enumeration value="RECOMMENDED_FOR_PROMOTION"/>
+            <xsd:enumeration value="REGULAR"/>
+            <xsd:enumeration value="PROBATION"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+    <xsd:simpleType name="PositionEnum">
+        <xsd:restriction base="xsd:string">
+            <xsd:enumeration value="MANAGER_OF_CLEANING"/>
+            <xsd:enumeration value="DEVELOPER"/>
+            <xsd:enumeration value="LEAD_DEVELOPER"/>
+            <xsd:enumeration value="HUMAN_RESOURCES"/>
+            <xsd:enumeration value="CLEANER"/>
+        </xsd:restriction>
+    </xsd:simpleType>
+
+</xsd:schema>

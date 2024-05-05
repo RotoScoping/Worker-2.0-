@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<workers>
+    <worker>
+        <name>John Doe</name>
+        <coordinates>
+            <x>100</x>
+            <y>200.5</y>
+        </coordinates>
+        <salary>3000.0</salary>
+        <startDate>2003-02-22T00:00:00</startDate>
+        <position>DEVELOPER</position>
+        <status>HIRED</status>
+        <organization>
+            <fullName>Cccc</fullName>
+            <type>COMMERCIAL</type>
+            <postalAddress>
+                <zipCode>12345</zipCode>
+                <town>
+                    <x>50.5</x>
+                    <y>75</y>
+                    <z>0.0</z>
+                    <name>City</name>
+                </town>
+            </postalAddress>
+        </organization>
+    </worker>
+    <worker>
+        <name>John Doe</name>
+        <coordinates>
+            <x>100</x>
+            <y>200.5</y>
+        </coordinates>
+        <salary>3000.0</salary>
+        <startDate>2003-02-22T00:00:00</startDate>
+        <position>DEVELOPER</position>
+        <status>HIRED</status>
+        <organization>
+            <fullName>Aaaaaaa</fullName>
+            <type>COMMERCIAL</type>
+            <postalAddress>
+                <zipCode>12345</zipCode>
+                <town>
+                    <x>50.5</x>
+                    <y>75</y>
+                    <z>0.0</z>
+                    <name>City</name>
+                </town>
+            </postalAddress>
+        </organization>
+    </worker>
+    <worker>
+        <name>John Doe</name>
+        <coordinates>
+            <x>100</x>
+            <y>200.5</y>
+        </coordinates>
+        <salary>3000.0</salary>
+        <startDate>2003-02-22T00:00:00</startDate>
+        <position>DEVELOPER</position>
+        <status>HIRED</status>
+        <organization>
+            <fullName>Bbbbbb</fullName>
+            <type>COMMERCIAL</type>
+            <postalAddress>
+                <zipCode>12345</zipCode>
+                <town>
+                    <x>50.5</x>
+                    <y>75</y>
+                    <z>0.0</z>
+                    <name>City</name>
+                </town>
+            </postalAddress>
+        </organization>
+    </worker>
+
+    <worker>
+        <name>mark</name>
+        <coordinates>
+            <x>21</x>
+            <y>21.0</y>
+        </coordinates>
+        <salary>21.0</salary>
+        <startDate>2003-02-22T00:00:00</startDate>
+        <position>DEVELOPER</position>
+        <status>HIRED</status>
+    </worker>
+
+</workers>
