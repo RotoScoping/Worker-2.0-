@@ -1,14 +1,26 @@
 package org.example;
 
+import org.example.logger.AsyncLogger;
+
+import java.io.IOException;
+import java.net.InetAddress;
+import java.net.Socket;
+
 public class Port {
 
+    private static final AsyncLogger logger = AsyncLogger.get("server");
     private static final int MIN_PORT = 1024;
     private static final int MAX_PORT = 65535;
 
     public static int tryPort(String port) {
         try {
             int numericPort = Integer.parseInt(port);
-            return numericPort >= MIN_PORT && numericPort <= MAX_PORT ? numericPort : 0;
+            int candidatePort = numericPort >= MIN_PORT && numericPort <= MAX_PORT ? numericPort : 0;
+            try (Socket socket = new Socket(InetAddress.getLocalHost(), candidatePort)) {
+                return candidatePort;
+            } catch (IOException e) {
+                return 0;
+            }
         } catch (NumberFormatException e) {
             return 0;
         }

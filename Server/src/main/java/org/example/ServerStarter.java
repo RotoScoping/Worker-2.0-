@@ -1,5 +1,7 @@
 package org.example;
 import org.example.logger.AsyncLogger;
+
+import java.util.logging.ConsoleHandler;
 import java.util.logging.Level;
 public class ServerStarter {
 
@@ -7,6 +9,7 @@ public class ServerStarter {
 
     public static void main(String[] args) {
         AsyncLogger logger = AsyncLogger.registerLogger("server", LOG_FILE_PATH);
+        logger.setHandler(new ConsoleHandler());
         logger.log(Level.INFO, "Начало работы программы сервера");
         Server server = new Server();
         server.run();

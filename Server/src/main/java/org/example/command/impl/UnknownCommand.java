@@ -11,7 +11,7 @@ import java.nio.ByteBuffer;
 public class UnknownCommand implements ICommand {
     @Override
     public Message execute(ByteBuffer payload) {
-
+        payload.rewind();
         return new Message(String.format("""
                 
                 ОШИБКА: Неизвестная команда "%d"\s

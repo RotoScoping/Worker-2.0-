@@ -22,7 +22,7 @@ public class RemoveByIdCommand implements ICommand {
     @Override
     public Message execute(ByteBuffer payload) {
 
-        payload.position(1);
+        payload.position(37);
         byte b1 = payload.get();
         byte b2 = payload.get();
         byte b3 = payload.get();

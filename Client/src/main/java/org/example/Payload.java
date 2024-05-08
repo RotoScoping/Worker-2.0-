@@ -1,6 +1,7 @@
 package org.example;
 
 import org.example.logger.AsyncLogger;
+import org.example.model.Form;
 import org.example.model.Worker;
 
 import java.io.ByteArrayOutputStream;
@@ -9,6 +10,7 @@ import java.io.ObjectOutputStream;
 import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 import java.util.logging.Level;
 
 public class Payload {
@@ -17,13 +19,14 @@ public class Payload {
     private static final int PAYLOAD_SIZE = 4000;
     private static final Map<String, Integer> commandBit;
     private final String command;
-    private final String[] args;
     private byte[] payload;
 
 
     static {
         commandBit = new HashMap<>();
         commandBit.put("help", 10);
+        commandBit.put("sign_up", 101);
+        commandBit.put("sign_in", 111);
         commandBit.put("info", 20);
         commandBit.put("show", 30);
         commandBit.put("add", 11);
@@ -39,17 +42,18 @@ public class Payload {
     }
 
 
-    Payload(String command, String... args) {
+    Payload(UUID token , String command) {
         this.command = command;
-        this.args = args;
-        loadData();
+        loadData(token);
     }
 
-    private void loadData() {
+    private void loadData(UUID token) {
 
         int bit = commandBit.getOrDefault(command, 0);
+        byte[] tokenBytes = getTokenBytes(token);
         payload = new byte[PAYLOAD_SIZE];
         payload[0] = (byte) bit;
+        System.arraycopy(tokenBytes, 0, payload, 1, tokenBytes.length);
         byte[] data = switch (bit) {
             // 11 - add, 21 - update_id , 41 - add_if_max , 51 - add_if_min
             case 11, 21, 41, 51 -> {
@@ -79,11 +83,32 @@ public class Payload {
                 yield buffer.array();
             }
 
+            case 101, 111 -> {
+                Form form = bit == 101 ? ConsoleHelper.getRegisterForm() : ConsoleHelper.getEnterForm();
+                byte[] model = new byte[0];
+                try (var bis = new ByteArrayOutputStream();
+                     var ois = new ObjectOutputStream(bis);) {
+                    ois.writeObject(form);
+                    model =  bis.toByteArray();
+                    System.out.println(model.length);
+
+                } catch (IOException e) {
+                    logger.log(Level.INFO, "Ошибка при соединении");
+                }
+                yield model;
+
+
+            }
+
             default -> 
                 ByteBuffer.allocate(0).array();
         };
-        System.arraycopy(data, 0, payload, 1, data.length);
+        System.arraycopy(data, 0, payload, 37, data.length);
 
+    }
+
+    private byte[] getTokenBytes(UUID token) {
+        return token == null ? new byte[36] : token.toString().getBytes();
     }
 
     public byte[] getData() {

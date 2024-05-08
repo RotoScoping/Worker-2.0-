@@ -28,6 +28,10 @@ public class Server {
     private static final int BUFFER_SIZE = 32768;
     private static final Map<Integer, ICommand> commandMap;
 
+    private final AuthContext auth;
+
+
+    private final Map<InetSocketAddress, String> users;
 
     static {
         commandMap = new HashMap<>();
@@ -44,10 +48,14 @@ public class Server {
         commandMap.put(70, new AvarageOfSalaryCommand());
         commandMap.put(80, new PrintFieldAscendingStatus());
         commandMap.put(90, new PrintFieldDescendingOrganization());
+        commandMap.put(101, new SignUpCommand());
+        commandMap.put(111, new SignInCommand());
     }
 
 
     public Server() {
+        this.users = new HashMap<>();
+        this.auth = AuthContext.get();
         this.isStopped = false;
         this.saver = new SaveCommand();
         new Thread(new StopController(this)).start();
@@ -90,10 +98,16 @@ public class Server {
                     if (key.isReadable()) {
                         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
                         InetSocketAddress clientAddress = (InetSocketAddress) channel.receive(buffer);
-                        logger.log(Level.INFO, String.format("Клиент %s:%d прислал команду", clientAddress.getAddress(), clientAddress.getPort()));
+                        logger.log(Level.INFO, String.format("Клиент %s:%d подключился! Всего на сервере ", clientAddress.getAddress(), clientAddress.getPort()));
                         buffer.flip();
-                        ICommand iCommand = commandMap.getOrDefault((int) buffer.get(), new UnknownCommand());
-                        Message msg = iCommand.execute(buffer);
+                        Message msg = new Message();
+                        if (!auth.isUserAuth(buffer)) {
+                            msg = msg.setMessage("Войдите в аккаунт или зарегистрируйтесь");
+                        } else {
+                            buffer.rewind();
+                            ICommand iCommand = commandMap.getOrDefault((int) buffer.get(), new UnknownCommand());
+                            msg = iCommand.execute(buffer);
+                        }
                         ByteBuffer responseBuffer = ByteBuffer.wrap(serialMessage(msg));
                         channel.send(responseBuffer, clientAddress);
                         logger.log(Level.INFO, "Отправлен ответ клиенту " + clientAddress);
@@ -105,6 +119,8 @@ public class Server {
         }
 
     }
+
+
 
     private byte[] serialMessage(Message msg) {
         byte[] serMess = new byte[0];

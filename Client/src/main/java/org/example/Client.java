@@ -11,9 +11,10 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.UUID;
 import java.util.logging.Level;
 
-public class Client  {
+public class Client {
 
     private DatagramChannel channel;
     private final ScriptExecutor script;
@@ -22,31 +23,34 @@ public class Client  {
 
     private InetSocketAddress serverAddress;
     private Configuration configuration;
+    private UUID token;
 
     public Client(Configuration configuration) {
-        this.configuration =configuration;
+        this.configuration = configuration;
         this.script = new ScriptExecutor();
     }
 
     public void run() {
         configuration.tryToConnect();
         serverAddress = configuration.getSocketAddress();
-
-        logger.log(Level.INFO, "Начало работы клиента");
-        try (
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in))) {
+        logger.log(Level.INFO, String.format("Клиент подключился к серверу %s:%d", serverAddress.getAddress(), serverAddress.getPort()));
+        try {
             channel = DatagramChannel.open();
             channel.bind(null);
             InetSocketAddress localAddress = (InetSocketAddress) channel.getLocalAddress();
-            logger.log(Level.INFO, String.format("Клиент открыл сокет %s:%d",localAddress.getAddress().toString(), localAddress.getPort() ));
+            logger.log(Level.INFO, String.format("Клиент открыл сокет %s:%d", localAddress.getAddress()
+                    .toString(), localAddress.getPort()));
             channel.configureBlocking(false);
-            String[] commandAndArgs;
+
+
             while (true) {
-                System.out.print("Введите команду: ");
-                commandAndArgs = reader.readLine().split(" ");
+                String[] commandAndArgs = ConsoleHelper.getCommandAndArgs();
+                if (!validateCommand(commandAndArgs)) continue;
                 if (commandAndArgs[0].equals("exit")) break;
                 sendPacket(commandAndArgs);
             }
+
+
             channel.disconnect();
 
         } catch (IOException e) {
@@ -58,13 +62,13 @@ public class Client  {
     }
 
     public void sendPacket(String[] commandAndArgs) {
-        try  {
+        try {
             if (commandAndArgs[0].equals("execute_script")) {
-                    String result = script.execute(this, commandAndArgs);
-                    logger.log(Level.INFO, result);
-                    return;
+                String result = script.execute(this, commandAndArgs);
+                logger.log(Level.INFO, result);
+                return;
             }
-            Payload payload = new Payload(commandAndArgs[0], null);
+            Payload payload = new Payload(token, commandAndArgs[0]);
 
             if (payload.isEmptyPayload()) {
                 logger.log(Level.INFO, String.format("Команда %s не найдена", commandAndArgs[0]));
@@ -72,36 +76,64 @@ public class Client  {
                 return;
             }
 
-            logger.log(Level.INFO, String.format("Клиент отправил команду %s на сервер %s:%d", commandAndArgs[0], serverAddress.getAddress().toString(), serverAddress.getPort()));
+            logger.log(Level.INFO, String.format("Клиент отправил команду %s на сервер %s:%d", commandAndArgs[0], serverAddress.getAddress()
+                    .toString(), serverAddress.getPort()));
             ByteBuffer buffer = ByteBuffer.wrap(payload.getData());
-            channel.send(buffer, serverAddress);
-            buffer.clear();
-
+            // buffer.clear();
             Selector selector = Selector.open();
             channel.register(selector, SelectionKey.OP_READ);
-            if (selector.select(5000) > 0) { // timeout 5sec
-                Set<SelectionKey> selectedKeys = selector.selectedKeys();
-                Iterator<SelectionKey> iterator = selectedKeys.iterator();
-                while (iterator.hasNext()) {
-                    SelectionKey key = iterator.next();
-                    if (key.isReadable()) {
-                        channel.receive(buffer);
-                        buffer.flip();
-                        Message message = deserializeMessage(buffer.array());
-                        System.out.println(message.getMessage());
-                        buffer.clear();
+            if (!sendPacketWithRetries(selector, buffer, commandAndArgs[0])) {
+                return;
+            }
+            buffer.clear();
+            Set<SelectionKey> selectedKeys = selector.selectedKeys();
+            Iterator<SelectionKey> iterator = selectedKeys.iterator();
+            while (iterator.hasNext()) {
+                SelectionKey key = iterator.next();
+                if (key.isReadable()) {
+                    channel.receive(buffer);
+                    buffer.flip();
+                    Message message = deserializeMessage(buffer.array());
+                    UUID receivedToken = message.getToken();
+                    if (receivedToken != null) {
+                        token = receivedToken;
                     }
-                    iterator.remove();
+                    System.out.println(message.getMessage());
+                    buffer.clear();
                 }
-            } else {
-                System.out.printf("Сервер %s:%d недоступен %n", serverAddress.getHostName(), serverAddress.getPort());
-                logger.log(Level.WARNING, String.format("Сервер %s:%d ", serverAddress.getHostName(), serverAddress.getPort()));
+                iterator.remove();
 
             }
         } catch (IOException e) {
             logger.log(Level.SEVERE, String.format("Ошибка при отправке/получении пакета %s", e.getMessage()));
         }
 
+    }
+
+    private boolean sendPacketWithRetries(Selector selector, ByteBuffer buffer, String command) throws IOException {
+
+        int attempts = 0;
+
+        logger.log(Level.INFO, String.format("Клиент отправил команду %s на сервер %s:%d",
+                command, serverAddress.getAddress()
+                        .toString(), serverAddress.getPort()));
+
+        channel.send(buffer, serverAddress);
+        while (selector.select(5000) == 0 && attempts++ < 4) {
+            System.out.printf("Сервер %s:%d недоступен %n", serverAddress.getHostName(), serverAddress.getPort());
+            System.out.println("Пытаемся повторно отправить пакет ... ");
+            logger.log(Level.WARNING, String.format("Сервер %s:%d недоступен", serverAddress.getHostName(), serverAddress.getPort()));
+            buffer.rewind(); // Или buffer.flip(), чтобы сбросить позицию
+            channel.send(buffer, serverAddress);
+        }
+
+        if (attempts >= 4) {
+            System.out.printf("Не удалось отправить команду на сервер %s:%d%n", serverAddress.getHostName(), serverAddress.getPort());
+            logger.log(Level.WARNING, String.format("Не удалось отправить команду на сервер %s:%d", serverAddress.getHostName(), serverAddress.getPort()));
+            return false;
+        }
+
+        return true;
     }
 
     private Message deserializeMessage(byte[] bytes) {
@@ -115,6 +147,15 @@ public class Client  {
         }
 
         return new Message("Ошбика при чтении ответа сервера!");
+    }
+
+
+    private boolean validateCommand(String[] commandAndArgs) {
+        if (commandAndArgs == null || commandAndArgs.length == 0) {
+            logger.log(Level.WARNING, "Команда не указана.");
+            return false;
+        }
+        return true;
     }
 
 

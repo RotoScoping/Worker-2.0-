@@ -26,7 +26,7 @@ public class UpdateCommand implements ICommand {
 
     @Override
     public Message execute(ByteBuffer payload) {
-        try (var bis = new ByteArrayInputStream(payload.array(), 1, payload.array().length - 1);
+        try (var bis = new ByteArrayInputStream(payload.array(), 37, payload.array().length - 37);
              var ois = new ObjectInputStream(bis)) {
             Worker worker = (Worker) ois.readObject();
             System.out.println("Получен объект: " + worker);

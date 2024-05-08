@@ -2,6 +2,9 @@ package org.example;
 
 import org.example.model.*;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
@@ -238,6 +241,27 @@ public final class ConsoleHelper {
 
     }
 
+    public static Form getRegisterForm() {
+        System.out.println("Форма регистрации: ");
+        return getForm();
+    }
+
+    public static Form getEnterForm() {
+        System.out.println("Форма входа: ");
+        return getForm();
+
+    }
+
+    private static Form getForm() {
+        Scanner sc = new Scanner(System.in);
+        System.out.print("Введите логин: ");
+        String login = sc.nextLine();
+        System.out.print("Введите пароль: ");
+        String password = sc.nextLine();
+        return new Form(login, password);
+
+    }
+
     /**
      * Метод который который пытается превратить строку в Position
      *
@@ -332,6 +356,15 @@ public final class ConsoleHelper {
         }
         return sc.nextInt();
 
+    }
+
+    public static String[] getCommandAndArgs() {
+        try { var reader = new BufferedReader(new InputStreamReader(System.in));
+            System.out.print("Введите команду: ");
+            return reader.readLine().split(" ");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
 }

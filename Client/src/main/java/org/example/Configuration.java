@@ -23,7 +23,7 @@ public class Configuration {
             socket.setSoTimeout(5000); // Установка таймаута ожидания ответа
             while (true) {
                 System.out.printf("Пытаемся подлкючиться к %s:%d ... %n", serverAddress, serverPort);
-                byte[] sendData = "Ping".getBytes();
+                byte[] sendData = {0};
                 DatagramPacket sendPacket = new DatagramPacket(sendData, sendData.length, InetAddress.getByName(serverAddress), serverPort);
                 socket.send(sendPacket);
                 byte[] receiveData = new byte[1024];
