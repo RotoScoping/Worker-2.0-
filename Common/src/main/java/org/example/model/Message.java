@@ -7,14 +7,18 @@ import java.util.UUID;
 public class Message implements Serializable {
 
 
+    private int id;
+
     private String message;
 
     private List<Worker> workers;
 
     private UUID token;
 
+    private int totalPackages;
 
     public Message() {};
+
     public Message(String message) {
         this(message, null);
     }
@@ -24,7 +28,6 @@ public class Message implements Serializable {
         this.workers = workers;
 
     }
-
     public String getMessage() {
         return message;
     }
@@ -45,6 +48,22 @@ public class Message implements Serializable {
 
     public UUID getToken() {
         return token;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getTotalPackages() {
+        return totalPackages;
+    }
+
+    public void setTotalPackages(int totalPackages) {
+        this.totalPackages = totalPackages;
     }
 }
 

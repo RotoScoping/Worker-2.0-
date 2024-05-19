@@ -17,41 +17,38 @@ public class CommandResolver {
 
     private static final AsyncLogger logger = AsyncLogger.get("server");
 
-    private static final Map<String,ICommand> commandMap;
+    private static final Map<Integer,ICommand> commandMap;
 
     private static final Set<String> scriptsHistory = new HashSet<>();
 
     static {
         commandMap = new HashMap<>();
-        commandMap.put("help", new HelpCommand());
-        commandMap.put("info", new InfoCommand());
-        commandMap.put("show", new ShowCommand());
-        commandMap.put("add", new AddCommand());
-        commandMap.put("update_id", new UpdateCommand());
-        commandMap.put("remove_by_id", new RemoveByIdCommand());
-        commandMap.put("clear", new ClearCommand());
-        commandMap.put("save", new SaveCommand());
-        commandMap.put("exit", new ExitCommand());
-        commandMap.put("remove_first", new RemoveFirstCommand());
-        commandMap.put("add_if_max", new AddIfMaxCommand());
-        commandMap.put("add_if_min", new AddIfMinCommand());
-        commandMap.put("average_of_salary", new AvarageOfSalaryCommand());
-        commandMap.put("print_field_ascending_status", new PrintFieldAscendingStatus());
-        commandMap.put("print_field_descending_organization", new PrintFieldDescendingOrganization());
+        commandMap.put(10, new HelpCommand());
+        commandMap.put(20, new InfoCommand());
+        commandMap.put(30, new ShowCommand());
+        commandMap.put(11, new AddCommand());
+        commandMap.put(21, new UpdateCommand());
+        commandMap.put(32, new RemoveByIdCommand());
+        commandMap.put(40, new ClearCommand());
+        commandMap.put(60, new RemoveFirstCommand());
+        commandMap.put(41, new AddIfMaxCommand());
+        commandMap.put(51, new AddIfMinCommand());
+        commandMap.put(70, new AvarageOfSalaryCommand());
+        commandMap.put(80, new PrintFieldAscendingStatus());
+        commandMap.put(90, new PrintFieldDescendingOrganization());
+        commandMap.put(101, new SignUpCommand());
+        commandMap.put(111, new SignInCommand());
     }
 
 
     /**
      * Метод который резолвит команду
      *
-     * @param command the command
+     * @param operationCode the command
      * @return boolean command
      */
-    public static ICommand get (String command) {
-        logger.log(Level.INFO, "Разрешение " + command + "команды в списке доступных команд");
-        return commandMap.getOrDefault(command.trim(),new UnknownCommand());
-
-
+    public static ICommand get (int operationCode) {
+        return commandMap.getOrDefault(operationCode,new UnknownCommand());
     }
 
     /**

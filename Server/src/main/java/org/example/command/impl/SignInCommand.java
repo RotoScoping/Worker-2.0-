@@ -16,7 +16,6 @@ public class SignInCommand implements ICommand {
     private final AuthContext auth = AuthContext.get();
     @Override
     public Message execute(ByteBuffer payload) {
-
         try (var bis = new ByteArrayInputStream(payload.array(), 37, payload.array().length - 37);
              var ois = new ObjectInputStream(bis)) {
             Form form = (Form) ois.readObject();

@@ -9,10 +9,10 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.util.Iterator;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class Client {
 
@@ -20,7 +20,7 @@ public class Client {
     private final ScriptExecutor script;
 
     private static final AsyncLogger logger = AsyncLogger.get("client");
-
+    private Map<Integer, byte[]> fragments = new TreeMap<>();
     private InetSocketAddress serverAddress;
     private Configuration configuration;
     private UUID token;
@@ -91,15 +91,26 @@ public class Client {
             while (iterator.hasNext()) {
                 SelectionKey key = iterator.next();
                 if (key.isReadable()) {
-                    channel.receive(buffer);
-                    buffer.flip();
-                    Message message = deserializeMessage(buffer.array());
-                    UUID receivedToken = message.getToken();
-                    if (receivedToken != null) {
-                        token = receivedToken;
+                    while (channel.receive(buffer) != null) {
+                        buffer.flip();
+                        Message message = deserializeMessage(buffer.array());
+                        int fragmentId = message.getId();
+                        byte[] fragmentData = message.getMessage()
+                                .getBytes();
+                        fragments.put(fragmentId, fragmentData);
+                        if (fragments.size() == message.getTotalPackages()) {
+                            System.out.println(assemblePackage());
+                            fragments.clear();
+
+                        }
+
+                        UUID receivedToken = message.getToken();
+                        if (receivedToken != null) {
+                            token = receivedToken;
+                        }
+
+                        buffer.clear();
                     }
-                    System.out.println(message.getMessage());
-                    buffer.clear();
                 }
                 iterator.remove();
 
@@ -108,6 +119,12 @@ public class Client {
             logger.log(Level.SEVERE, String.format("Ошибка при отправке/получении пакета %s", e.getMessage()));
         }
 
+    }
+
+    private String assemblePackage() {
+       return fragments.values().stream()
+               .map(String::new)
+               .collect(Collectors.joining());
     }
 
     private boolean sendPacketWithRetries(Selector selector, ByteBuffer buffer, String command) throws IOException {
@@ -123,7 +140,7 @@ public class Client {
             System.out.printf("Сервер %s:%d недоступен %n", serverAddress.getHostName(), serverAddress.getPort());
             System.out.println("Пытаемся повторно отправить пакет ... ");
             logger.log(Level.WARNING, String.format("Сервер %s:%d недоступен", serverAddress.getHostName(), serverAddress.getPort()));
-            buffer.rewind(); // Или buffer.flip(), чтобы сбросить позицию
+            buffer.rewind();
             channel.send(buffer, serverAddress);
         }
 

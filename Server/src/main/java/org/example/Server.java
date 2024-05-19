@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.command.CommandResolver;
 import org.example.command.ICommand;
 import org.example.command.impl.*;
 import org.example.logger.AsyncLogger;
@@ -13,10 +14,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.logging.Level;
 
 public class Server {
@@ -25,13 +23,19 @@ public class Server {
     public static final String SERVER_PORT = System.getenv("WORKER_SERVER_PORT");
     private volatile boolean isStopped;
     private final ICommand saver;
-    private static final int BUFFER_SIZE = 32768;
+    private static final int BUFFER_SIZE = 1400;
     private static final Map<Integer, ICommand> commandMap;
+
 
     private final AuthContext auth;
 
 
-    private final Map<InetSocketAddress, String> users;
+    private static final int MTU = 1400;
+    private static final int HEADER_SIZE = 4;
+    private static final int PAYLOAD_SIZE = MTU - HEADER_SIZE;
+
+
+    private final Set<InetSocketAddress> users;
 
     static {
         commandMap = new HashMap<>();
@@ -54,7 +58,7 @@ public class Server {
 
 
     public Server() {
-        this.users = new HashMap<>();
+        this.users = new HashSet<>();
         this.auth = AuthContext.get();
         this.isStopped = false;
         this.saver = new SaveCommand();
@@ -98,18 +102,39 @@ public class Server {
                     if (key.isReadable()) {
                         ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
                         InetSocketAddress clientAddress = (InetSocketAddress) channel.receive(buffer);
-                        logger.log(Level.INFO, String.format("Клиент %s:%d подключился! Всего на сервере ", clientAddress.getAddress(), clientAddress.getPort()));
+                        if(users.add(clientAddress)) {
+                            logger.log(Level.INFO, String.format("Клиент %s:%d подключился! Всего подключившихся %d", clientAddress.getAddress(), clientAddress.getPort(), users.size()));
+                        }
                         buffer.flip();
+                        logger.log(Level.INFO, String.format("Сервер получил %d байт от %s:%d", buffer.remaining(), clientAddress.getAddress(), clientAddress.getPort()));
                         Message msg = new Message();
                         if (!auth.isUserAuth(buffer)) {
                             msg = msg.setMessage("Войдите в аккаунт или зарегистрируйтесь");
                         } else {
                             buffer.rewind();
-                            ICommand iCommand = commandMap.getOrDefault((int) buffer.get(), new UnknownCommand());
-                            msg = iCommand.execute(buffer);
+                            ICommand command = CommandResolver.get(buffer.get());
+                            logger.log(Level.INFO, String.format("Клиент %s:%d использует команду %s.", clientAddress.getAddress(), clientAddress.getPort(),command.getClass().getSimpleName()));
+                            msg = command.execute(buffer);
                         }
-                        ByteBuffer responseBuffer = ByteBuffer.wrap(serialMessage(msg));
-                        channel.send(responseBuffer, clientAddress);
+                        byte[] data = msg.getMessage()
+                                .getBytes();
+
+                        int totalPackets = (int) Math.ceil((double) data.length / PAYLOAD_SIZE);
+                        for (int i = 0; i < totalPackets; i++) {
+                            // 0 * 1396 , 1 * 1398, 2 * 1398, начало подпакета в пакете всегда фикса
+                            int start = i * PAYLOAD_SIZE;
+                            // 734, 1396
+                            // В случае если последний последний пакет - вернет его фактический размер
+                            int end = Math.min(data.length, start + PAYLOAD_SIZE);
+                            byte[] fragment = Arrays.copyOfRange(data, start, end);
+                            msg.setMessage(new String(fragment));
+                            msg.setId(i);
+                            logger.log(Level.INFO, String.format("Сервер отправил пакет №%d размером %d байт для %s:%d", i+1, fragment.length, clientAddress.getAddress(), clientAddress.getPort()));
+                            msg.setTotalPackages(totalPackets);
+                            ByteBuffer part = ByteBuffer.wrap(serialMessage(msg));
+                            channel.send(part,clientAddress);
+                        }
+
                         logger.log(Level.INFO, "Отправлен ответ клиенту " + clientAddress);
                         buffer.clear();
                     }

@@ -36,7 +36,7 @@ public class AsyncLogger {
             Handler fileHandler = new FileHandler(path, logSize, logCount, true);
             logger.addHandler(fileHandler);
             logger.setUseParentHandlers(false);
-            fileHandler.setFormatter(new SimpleFormatter());
+            fileHandler.setFormatter(new GenericFormatter());
         } catch (IOException e) {
             System.err.println("Ошибка при настройке FileHandler для логгера: " + e.getMessage());
         }
@@ -46,7 +46,9 @@ public class AsyncLogger {
 
 
     public void setHandler(Handler handler) {
+        handler.setFormatter(new GenericFormatter());
         logger.addHandler(handler);
+
     }
 
     /**
