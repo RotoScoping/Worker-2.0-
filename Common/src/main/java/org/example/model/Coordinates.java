@@ -6,6 +6,7 @@ import org.example.validation.annotations.Min;
 import org.example.validation.annotations.NotNull;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Worker coordinates.
@@ -25,6 +26,9 @@ import java.io.Serializable;
  */
 public class Coordinates implements Serializable {
 
+
+
+    private int id;
     @NotNull
     @Min(-977)
     private Long x;
@@ -32,6 +36,7 @@ public class Coordinates implements Serializable {
     @NotNull
     @Max(value = 886)
     private Double y;
+
 
     private Coordinates() {}
 
@@ -50,6 +55,11 @@ public class Coordinates implements Serializable {
     public class Builder {
 
         private Builder(){}
+
+        public Builder id(int id) {
+            Coordinates.this.id = id;
+            return this;
+        }
 
         /**
          * X builder.
@@ -121,8 +131,31 @@ public class Coordinates implements Serializable {
         this.y = y;
     }
 
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
     @Override
     public String toString() {
         return String.format("(%d,%.1f)", x, y);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Coordinates that = (Coordinates) o;
+        return Objects.equals(x, that.x) && Objects.equals(y, that.y);
+    }
+
+
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
     }
 }

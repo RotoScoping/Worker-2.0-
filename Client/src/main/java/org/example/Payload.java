@@ -48,7 +48,6 @@ public class Payload {
     }
 
     private void loadData(UUID token) {
-
         int bit = commandBit.getOrDefault(command, 0);
         byte[] tokenBytes = getTokenBytes(token);
         payload = new byte[PAYLOAD_SIZE];
@@ -88,16 +87,12 @@ public class Payload {
                 byte[] model = new byte[0];
                 try (var bis = new ByteArrayOutputStream();
                      var ois = new ObjectOutputStream(bis);) {
-                    ois.writeObject(form);
+                    ois.writeObject(Crypto.getEncryptedForm(form));
                     model =  bis.toByteArray();
-                    System.out.println(model.length);
-
                 } catch (IOException e) {
                     logger.log(Level.INFO, "Ошибка при соединении");
                 }
                 yield model;
-
-
             }
 
             default -> 

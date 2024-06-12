@@ -51,6 +51,7 @@ public class Configuration {
         setHost(s);
         setPort(s);
         tryToConnect();
+        Class<? extends Configuration> aClass = this.getClass();
     }
 
     public InetSocketAddress getSocketAddress() {

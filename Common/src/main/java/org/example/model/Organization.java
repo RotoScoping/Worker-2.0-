@@ -4,6 +4,7 @@ package org.example.model;
 import org.example.validation.annotations.Length;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * The entity of the organization in which the worker works.
@@ -25,8 +26,23 @@ public class Organization implements Comparable<Organization>, Serializable {
 
 
 
+    private int id;
+
     @Length(value = 762)
     private String fullName;
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Organization that = (Organization) o;
+        return Objects.equals(fullName, that.fullName) && type == that.type && Objects.equals(postalAddress, that.postalAddress);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(fullName, type, postalAddress);
+    }
 
     private OrganizationType type;
 
@@ -58,6 +74,11 @@ public class Organization implements Comparable<Organization>, Serializable {
          */
         public Builder fullName(String fullName) {
             Organization.this.fullName = fullName;
+            return this;
+        }
+
+        public Builder id(int id) {
+            Organization.this.id = id;
             return this;
         }
 
@@ -132,5 +153,13 @@ public class Organization implements Comparable<Organization>, Serializable {
      */
     public Address getPostalAddress() {
         return postalAddress;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 }

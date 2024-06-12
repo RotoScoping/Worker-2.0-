@@ -15,7 +15,7 @@ public interface Crud<ID, Entity> {
      *
      * @param e the e
      */
-    void add(Entity e);
+    boolean add(Entity e);
 
     /**
      * Remove boolean.

@@ -8,14 +8,12 @@ public class Message implements Serializable {
 
 
     private int id;
-
-    private String message;
-
-    private List<Worker> workers;
-
+    private int totalPackages;
     private UUID token;
 
-    private int totalPackages;
+    private String message;
+    private List<Worker> workers;
+
 
     public Message() {};
 
@@ -26,7 +24,6 @@ public class Message implements Serializable {
     public Message(String message, List<Worker> workers) {
         this.message = message;
         this.workers = workers;
-
     }
     public String getMessage() {
         return message;

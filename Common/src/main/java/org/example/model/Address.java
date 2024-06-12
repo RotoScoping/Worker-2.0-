@@ -5,6 +5,7 @@ package org.example.model;
 import org.example.validation.annotations.NotNull;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 /**
  * Organization address.
@@ -97,6 +98,19 @@ public class Address implements Serializable {
         public Address build() {
             return Address.this;
         }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Address address = (Address) o;
+        return Objects.equals(zipCode, address.zipCode) && Objects.equals(town, address.town);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(zipCode, town);
     }
 
     @Override

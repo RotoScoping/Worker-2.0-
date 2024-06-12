@@ -1,7 +1,9 @@
 package org.example.command.impl;
 
+import org.example.auth.AuthContext;
 import org.example.command.ICommand;
 import org.example.model.Message;
+import org.example.model.User;
 import org.example.service.WorkerService;
 
 import java.nio.ByteBuffer;
@@ -11,6 +13,7 @@ import java.nio.ByteBuffer;
  */
 public class RemoveFirstCommand implements ICommand {
     private final WorkerService service = WorkerService.getInstance();
+    private final AuthContext auth = AuthContext.get();
 
 
     /**
@@ -19,7 +22,13 @@ public class RemoveFirstCommand implements ICommand {
      */
     @Override
     public Message execute(ByteBuffer payload) {
-        return new Message(service.removeFirst());
+        byte[] tokenBytes = new byte[36];
+        payload.get(tokenBytes);
+        String token = new String(tokenBytes);
+        User user = auth.getUserBySessionToken(token);
+        System.out.println(user);
+        payload.rewind();
+        return new Message(service.removeFirst(user));
     }
 
     @Override

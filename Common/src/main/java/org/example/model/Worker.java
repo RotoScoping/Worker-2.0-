@@ -7,6 +7,30 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Date;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 /**
  * The main entity in the business logic of the service.
  * Worker has the following fields:
@@ -60,6 +84,7 @@ public class Worker implements Comparable<Worker>, Serializable {
 
     private Organization organization;
 
+    private User user;
 
     /**
      * Gets name.
@@ -171,6 +196,10 @@ public class Worker implements Comparable<Worker>, Serializable {
         this.creationDate = creationDate;
     }
 
+    public void setUser(User user) {
+        this.user = user;
+    }
+
     /**
      * The type Builder.
      */
@@ -214,6 +243,17 @@ public class Worker implements Comparable<Worker>, Serializable {
             return this;
         }
 
+        public Builder creationDate(LocalDate date) {
+            Worker.this.creationDate = date;
+            return this;
+        }
+
+
+        public Builder id(int id) {
+            Worker.this.id = id;
+            return this;
+        }
+
         /**
          * Start date builder.
          *
@@ -225,6 +265,11 @@ public class Worker implements Comparable<Worker>, Serializable {
             return this;
         }
 
+
+        public Builder user(User user) {
+            Worker.this.user = user;
+            return this;
+        }
         /**
          * Position builder.
          *
@@ -258,6 +303,7 @@ public class Worker implements Comparable<Worker>, Serializable {
             return this;
         }
 
+
         /**
          * Build worker.
          *
@@ -268,7 +314,9 @@ public class Worker implements Comparable<Worker>, Serializable {
         }
 
     }
-
+    public long getUserId() {
+        return user.getId();
+    }
 
 
     /**
@@ -286,8 +334,9 @@ public class Worker implements Comparable<Worker>, Serializable {
                 \tstartDate: %tF
                 \tposition: %s
                 \tstatus: %s
-                \torganization:
-                %s""", id, name, coordinates, creationDate, salary, startDate, position, status, organization);
+                \torganization: %s
+                \towner: %s
+                """, id, name, coordinates, creationDate, salary, startDate, position, status, organization, user.getUsername());
     }
 
 
@@ -301,10 +350,7 @@ public class Worker implements Comparable<Worker>, Serializable {
         return Integer.compare(this.id, o.id);
     }
 
-
+    public User getUser() {
+        return user;
+    }
 }
-
-
-
-
-

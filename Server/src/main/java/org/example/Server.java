@@ -1,5 +1,6 @@
 package org.example;
 
+import org.example.auth.AuthContext;
 import org.example.command.CommandResolver;
 import org.example.command.ICommand;
 import org.example.command.impl.*;
@@ -11,11 +12,16 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
+import java.nio.channels.AlreadyBoundException;
 import java.nio.channels.DatagramChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
 import java.util.logging.Level;
+
 
 public class Server {
 
@@ -27,6 +33,10 @@ public class Server {
     private static final Map<Integer, ICommand> commandMap;
 
 
+
+    private final ForkJoinPool requestReadingPool = new ForkJoinPool();
+    private final ForkJoinPool requestProcessingPool = new ForkJoinPool();
+    private final ExecutorService responseSendingPool = Executors.newFixedThreadPool(10);
     private final AuthContext auth;
 
 
@@ -63,9 +73,12 @@ public class Server {
         this.isStopped = false;
         this.saver = new SaveCommand();
         new Thread(new StopController(this)).start();
-        Runtime.getRuntime().addShutdownHook(new Thread(() ->
-                saver.execute(ByteBuffer.allocate(0))));
-    }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            responseSendingPool.shutdown();
+            requestProcessingPool.shutdown();
+            requestReadingPool.shutdown();
+        }));
+            }
 
 
     public void run() {
@@ -80,7 +93,12 @@ public class Server {
 
     private void setupServer(DatagramChannel channel ) throws IOException{
         channel.configureBlocking(false);
-        channel.bind(new InetSocketAddress(Port.tryPort(SERVER_PORT)));
+        try {
+            channel.bind(new InetSocketAddress(Port.tryPort(SERVER_PORT)));
+        } catch (AlreadyBoundException e) {
+            logger.log(Level.INFO, "Порт " + SERVER_PORT + " занят");
+            channel.bind(new InetSocketAddress(0));
+        }
         var localAddress = (InetSocketAddress) channel.getLocalAddress();
         logger.log(Level.INFO, String.format("Сервер запустился на порту %d", localAddress.getPort()));
     }
@@ -92,51 +110,24 @@ public class Server {
             logger.log(Level.INFO, "Сервер ожидает подключений...");
             while (!isStopped) {
                 selector.select();
-                logger.log(Level.INFO, "На сервер подключились");
                 if (isStopped) break;
                 Set<SelectionKey> selectedKeys = selector.selectedKeys();
                 Iterator<SelectionKey> iter = selectedKeys.iterator();
                 while (iter.hasNext()) {
-                    logger.log(Level.INFO, "Получен selectionKey");
                     SelectionKey key = iter.next();
                     if (key.isReadable()) {
-                        ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
-                        InetSocketAddress clientAddress = (InetSocketAddress) channel.receive(buffer);
-                        if(users.add(clientAddress)) {
-                            logger.log(Level.INFO, String.format("Клиент %s:%d подключился! Всего подключившихся %d", clientAddress.getAddress(), clientAddress.getPort(), users.size()));
-                        }
-                        buffer.flip();
-                        logger.log(Level.INFO, String.format("Сервер получил %d байт от %s:%d", buffer.remaining(), clientAddress.getAddress(), clientAddress.getPort()));
-                        Message msg = new Message();
-                        if (!auth.isUserAuth(buffer)) {
-                            msg = msg.setMessage("Войдите в аккаунт или зарегистрируйтесь");
-                        } else {
-                            buffer.rewind();
-                            ICommand command = CommandResolver.get(buffer.get());
-                            logger.log(Level.INFO, String.format("Клиент %s:%d использует команду %s.", clientAddress.getAddress(), clientAddress.getPort(),command.getClass().getSimpleName()));
-                            msg = command.execute(buffer);
-                        }
-                        byte[] data = msg.getMessage()
-                                .getBytes();
-
-                        int totalPackets = (int) Math.ceil((double) data.length / PAYLOAD_SIZE);
-                        for (int i = 0; i < totalPackets; i++) {
-                            // 0 * 1396 , 1 * 1398, 2 * 1398, начало подпакета в пакете всегда фикса
-                            int start = i * PAYLOAD_SIZE;
-                            // 734, 1396
-                            // В случае если последний последний пакет - вернет его фактический размер
-                            int end = Math.min(data.length, start + PAYLOAD_SIZE);
-                            byte[] fragment = Arrays.copyOfRange(data, start, end);
-                            msg.setMessage(new String(fragment));
-                            msg.setId(i);
-                            logger.log(Level.INFO, String.format("Сервер отправил пакет №%d размером %d байт для %s:%d", i+1, fragment.length, clientAddress.getAddress(), clientAddress.getPort()));
-                            msg.setTotalPackages(totalPackets);
-                            ByteBuffer part = ByteBuffer.wrap(serialMessage(msg));
-                            channel.send(part,clientAddress);
-                        }
-
-                        logger.log(Level.INFO, "Отправлен ответ клиенту " + clientAddress);
-                        buffer.clear();
+                        requestReadingPool.submit(() -> {
+                            ByteBuffer buffer = ByteBuffer.allocate(BUFFER_SIZE);
+                            InetSocketAddress clientAddress;
+                            try {
+                                clientAddress = (InetSocketAddress) channel.receive(buffer);
+                                if (clientAddress != null) {
+                                    handleRequest(channel, buffer, clientAddress);
+                                }
+                            } catch (IOException e) {
+                                logger.log(Level.SEVERE, "Ошибка при чтении запроса: " + e.getMessage());
+                            }
+                        });
                     }
                     iter.remove();
                 }
@@ -145,12 +136,56 @@ public class Server {
 
     }
 
+    private void handleRequest(DatagramChannel channel, ByteBuffer buffer, InetSocketAddress clientAddress) {
+        requestProcessingPool.submit(() -> {
+            if (users.add(clientAddress)) {
+                logger.log(Level.INFO, String.format("Клиент %s:%d подключился! Всего подключившихся %d", clientAddress.getAddress(), clientAddress.getPort(), users.size()));
+            }
+            buffer.flip();
+            logger.log(Level.INFO, String.format("Сервер получил %d байт от %s:%d", buffer.remaining(), clientAddress.getAddress(), clientAddress.getPort()));
+            Message msg;
+            if (!auth.isUserAuth(buffer)) {
+                msg = new Message().setMessage("Войдите в аккаунт или зарегистрируйтесь");
+            } else {
+                buffer.rewind();
+                ICommand command = CommandResolver.get(buffer.get());
+                logger.log(Level.INFO, String.format("Клиент %s:%d использует команду %s.", clientAddress.getAddress(), clientAddress.getPort(), command.getClass().getSimpleName()));
+                msg = command.execute(buffer);
+            }
+            byte[] data = msg.getMessage().getBytes();
+            sendResponse(channel, data, clientAddress, msg);
+            buffer.clear();
+        });
+    }
+
+    private void sendResponse(DatagramChannel channel, byte[] data, InetSocketAddress clientAddress, Message msg) {
+        responseSendingPool.submit(() -> {
+            int totalPackets = (int) Math.ceil((double) data.length / PAYLOAD_SIZE);
+            for (int i = 0; i < totalPackets; i++) {
+                int start = i * PAYLOAD_SIZE;
+                int end = Math.min(data.length, start + PAYLOAD_SIZE);
+                byte[] fragment = Arrays.copyOfRange(data, start, end);
+                msg.setMessage(new String(fragment));
+                msg.setId(i);
+                msg.setTotalPackages(totalPackets);
+                byte[] serializedMessage = serialMessage(msg);
+                ByteBuffer part = ByteBuffer.wrap(serializedMessage);
+
+                try {
+                    channel.send(part, clientAddress);
+                    logger.log(Level.INFO, String.format("Сервер отправил пакет №%d размером %d байт для %s:%d", i + 1, fragment.length, clientAddress.getAddress(), clientAddress.getPort()));
+                } catch (IOException e) {
+                    logger.log(Level.SEVERE, "Ошибка при отправке ответа: " + e.getMessage());
+                }
+            }
+        });
+    }
 
 
     private byte[] serialMessage(Message msg) {
         byte[] serMess = new byte[0];
         try (var bis = new ByteArrayOutputStream();
-             var ois = new ObjectOutputStream(bis);) {
+             var ois = new ObjectOutputStream(bis)) {
             ois.writeObject(msg);
             serMess = bis.toByteArray();
 
@@ -162,6 +197,9 @@ public class Server {
     }
 
     public void stop() {
+        responseSendingPool.shutdown();
+        requestProcessingPool.shutdown();
+        requestReadingPool.shutdown();
         saver.execute(ByteBuffer.allocate(0));
         isStopped = true;
     }

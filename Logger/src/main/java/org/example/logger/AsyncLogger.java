@@ -29,7 +29,6 @@ public class AsyncLogger {
      * Настройка логгера и запуск потока
      */
     private AsyncLogger(String name, String path, int logSize, int logCount) {
-
         queue = new ArrayBlockingQueue<>(228);
         logger = Logger.getLogger(name);
         try {

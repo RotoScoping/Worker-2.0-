@@ -4,6 +4,8 @@ import org.example.logger.AsyncLogger;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
+import java.net.ServerSocket;
 import java.net.Socket;
 
 public class Port {
@@ -16,7 +18,7 @@ public class Port {
         try {
             int numericPort = Integer.parseInt(port);
             int candidatePort = numericPort >= MIN_PORT && numericPort <= MAX_PORT ? numericPort : 0;
-            try (Socket socket = new Socket(InetAddress.getLocalHost(), candidatePort)) {
+            try (ServerSocket serverSocket = new ServerSocket(candidatePort)) {
                 return candidatePort;
             } catch (IOException e) {
                 return 0;

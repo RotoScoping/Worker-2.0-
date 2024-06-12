@@ -101,14 +101,12 @@ public class Client {
                         if (fragments.size() == message.getTotalPackages()) {
                             System.out.println(assemblePackage());
                             fragments.clear();
-
                         }
 
                         UUID receivedToken = message.getToken();
                         if (receivedToken != null) {
                             token = receivedToken;
                         }
-
                         buffer.clear();
                     }
                 }
@@ -136,7 +134,7 @@ public class Client {
                         .toString(), serverAddress.getPort()));
 
         channel.send(buffer, serverAddress);
-        while (selector.select(5000) == 0 && attempts++ < 4) {
+        while (selector.select(10000) == 0 && attempts++ < 4) {
             System.out.printf("Сервер %s:%d недоступен %n", serverAddress.getHostName(), serverAddress.getPort());
             System.out.println("Пытаемся повторно отправить пакет ... ");
             logger.log(Level.WARNING, String.format("Сервер %s:%d недоступен", serverAddress.getHostName(), serverAddress.getPort()));

@@ -2,6 +2,7 @@ package org.example.service;
 
 
 import org.example.model.Organization;
+import org.example.model.User;
 import org.example.model.Worker;
 import org.example.storage.AuditableCrud;
 import org.example.storage.iml.WorkerDao;
@@ -20,7 +21,7 @@ public class WorkerService {
 
     private final AuditableCrud<Integer, Worker> dao;
 
-    private static final WorkerService INSTANCE = new WorkerService(new WorkerDao(new FileLoader()), new Validator("core.model"));
+    private static final WorkerService INSTANCE = new WorkerService(WorkerDao.getInstance(), new Validator("core.model"));
 
     /**
      * Instantiates a new Worker service.
@@ -60,10 +61,12 @@ public class WorkerService {
      * @param worker the worker
      * @return A string describing the success or failure of the operation
      */
-    public String add(Worker worker) {
+    public String add(Worker worker, User user) {
         List<String> msg = validator.validate(worker);
         if (msg.size() == 0) {
+            worker.setUser(user);
             dao.add(worker);
+            System.out.println("52");
             return "Данные записаны!";
         }
         return String.join("\n", msg);
@@ -89,7 +92,8 @@ public class WorkerService {
      * @param worker the worker
      * @return A string describing the success or failure of the operation
      */
-    public String update(Worker worker) {
+    public String update(Worker worker, User user) {
+        worker.setUser(user);
         List<String> messages = validator.validate(worker);
         return messages.size() == 0 ?
                 dao.update(worker) ? "Данные успешно обновлены!" : "id такого worker не существует!"
@@ -102,13 +106,23 @@ public class WorkerService {
      *
      * @return A string describing the success or failure of the operation
      */
-    public String removeFirst() {
-        var storage = (PriorityQueue<Worker>) dao.readAll();
+    public String removeFirst(User user) {
+        var storage = dao.readAll();
+        boolean isDeleted = false;
         if (storage.size() == 0) {
             return "Коллекция пуста! Удаления не произошло!";
         }
-        storage.poll();
-        return "Элемент был удален";
+        System.out.println(storage.size());
+        for (Worker worker : storage) {
+            System.out.println(worker.getUserId());
+            if (worker.getUserId() == user.getId()) {
+                System.out.println("ВЫЗОВ");
+                isDeleted = dao.removeById(worker.getId());
+                break;
+            }
+        }
+
+        return isDeleted ? "Элемент был удален" : "Не нашлось такого элемента";
     }
 
     /**
@@ -129,10 +143,23 @@ public class WorkerService {
      * @param id the id
      * @return A string describing the success or failure of the operation
      */
-    public String removeById(Integer id) {
-        return dao.removeById(id)
-                ? "Пользователь был удален!"
-                : String.format("Пользователя с id=%d не существует.", id);
+    public String removeById(Integer id, User user) {
+        var workers = dao.readAll();
+        for (Worker worker: workers) {
+            if (worker.getId() == id) {
+                if (worker.getUserId() == user.getId()) {
+                    if (dao.removeById(id)) {
+                        return "Пользователь был удален!";
+                    } else {
+                        return "Произошла ошибка";
+                    }
+                } else {
+                    return "Вы не можете удалить этот объект!";
+                }
+
+            }
+        }
+        return String.format("Пользователя с id=%d не существует.", id);
 
     }
 
@@ -142,7 +169,8 @@ public class WorkerService {
      * @param worker the w
      * @return A string describing the success or failure of the operation
      */
-    public String addIfMaxSalary(Worker worker) {
+    public String addIfMaxSalary(Worker worker, User user) {
+        worker.setUser(user);
         List<String> messages = validator.validate(worker);
         if (messages.size() != 0)
             return "Полученный объект невалидный!";
@@ -168,7 +196,8 @@ public class WorkerService {
      * @param worker the worker
      * @return A string describing the success or failure of the operation
      */
-    public String addIfMinSalary(Worker worker) {
+    public String addIfMinSalary(Worker worker, User user) {
+        worker.setUser(user);
         List<String> messages = validator.validate(worker);
         if (messages.size() != 0)
             return "Полученный объект невалидный!";
@@ -194,13 +223,16 @@ public class WorkerService {
      * @return string with information about all workers
      */
     public String show() {
-        return dao.readAll()
-                       .size() == 0 ? "В коллекции пусто!" :
-                Arrays.stream(dao.readAll()
-                                .toArray(new Worker[0]))
+        var workers = dao.readAll();
+        System.out.println(workers);
+        String s = workers.size() == 0 ? "В коллекции пусто!" :
+                Arrays.stream(workers.toArray(new Worker[0]))
                         .sorted(Worker::compareTo)
                         .map(Worker::toString)
                         .collect(Collectors.joining("\n"));
+        System.out.println(s);
+
+        return s;
     }
 
     /**

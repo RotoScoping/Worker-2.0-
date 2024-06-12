@@ -118,7 +118,7 @@ public final class ConsoleHelper {
      * @return coordinates coordinates
      */
     public static Coordinates getCoordinates(Scanner sc) {
-        print("Введите местоположение воркера:\n ");
+        print("Введите местоположение воркера:\n");
         Coordinates.Builder coordinates = Coordinates.builder();
         print("Координата x: ");
         // x координата локации воркера

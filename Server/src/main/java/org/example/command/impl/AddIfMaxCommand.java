@@ -1,7 +1,9 @@
 package org.example.command.impl;
 
+import org.example.auth.AuthContext;
 import org.example.command.ICommand;
 import org.example.model.Message;
+import org.example.model.User;
 import org.example.model.Worker;
 import org.example.service.WorkerService;
 
@@ -16,7 +18,7 @@ import java.nio.ByteBuffer;
 public class AddIfMaxCommand implements ICommand {
     private final WorkerService service = WorkerService.getInstance();
 
-
+    private final AuthContext auth = AuthContext.get();
     /**
      * Add if max string.
      *
@@ -26,11 +28,16 @@ public class AddIfMaxCommand implements ICommand {
 
     @Override
     public Message execute(ByteBuffer payload) {
+        byte[] tokenBytes = new byte[36];
+        payload.get(tokenBytes);
+        String token = new String(tokenBytes);
+        User user = auth.getUserBySessionToken(token);
+        payload.rewind();
         try (var bis = new ByteArrayInputStream(payload.array(), 37, payload.array().length - 37);
              var ois = new ObjectInputStream(bis)) {
             Worker worker = (Worker) ois.readObject();
             System.out.println("Получен объект: " + worker);
-            return new Message(service.addIfMaxSalary(worker));
+            return new Message(service.addIfMaxSalary(worker,user));
         } catch (IOException | ClassNotFoundException e) {
             throw new RuntimeException(e);
         }

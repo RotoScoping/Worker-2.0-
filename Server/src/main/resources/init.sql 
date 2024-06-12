@@ -1,0 +1,72 @@
+DROP TYPE IF EXISTS position_type CASCADE ;
+DROP TYPE IF EXISTS  status_type CASCADE ;
+DROP TYPE IF EXISTS  organization_type CASCADE ;
+DROP TABLE IF EXISTS  coordinates CASCADE;
+DROP TABLE IF EXISTS  organizations CASCADE;
+DROP TABLE IF EXISTS  workers CASCADE;
+DROP TABLE IF EXISTS  sessions CASCADE;
+DROP TABLE IF EXISTS  users CASCADE;
+CREATE TYPE position_type AS ENUM ('HUMAN_RESOURCES', 'DEVELOPER', 'LEAD_DEVELOPER', 'CLEANER', 'MANAGER_OF_CLEANING');
+CREATE TYPE status_type AS ENUM ('FIRED', 'HIRED', 'RECOMMENDED_FOR_PROMOTION', 'REGULAR', 'PROBATION');
+CREATE TYPE organization_type AS ENUM ('COMMERCIAL', 'PUBLIC', 'GOVERNMENT');
+
+CREATE TABLE IF NOT EXISTS coordinates (
+                             id SERIAL PRIMARY KEY,
+                             x BIGINT NOT NULL CHECK (x > -977),
+                             y DOUBLE PRECISION NOT NULL CHECK (y <= 886)
+);
+
+
+
+CREATE TABLE IF NOT EXISTS organizations (
+                               id SERIAL PRIMARY KEY,
+                               full_name VARCHAR(762) UNIQUE,
+                               type organization_type,
+                               zip_code VARCHAR(255) NOT NULL,
+                               x DOUBLE PRECISION NOT NULL,
+                               y INTEGER NOT NULL,
+                               z DOUBLE PRECISION NOT NULL,
+                               address VARCHAR(255) NOT NULL
+);
+
+
+
+
+
+CREATE TABLE IF NOT EXISTS users (
+                       id BIGSERIAL PRIMARY KEY,
+                       username VARCHAR(50) NOT NULL UNIQUE,
+                       password_hash VARCHAR(128) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS workers (
+                         id BIGSERIAL PRIMARY KEY,
+                         name VARCHAR(255) NOT NULL,
+                         coordinates_id INTEGER NOT NULL REFERENCES coordinates(id),
+                         creation_date DATE NOT NULL,
+                         salary FLOAT CHECK (salary > 0),
+                         start_date DATE NOT NULL,
+                         position position_type NOT NULL,
+                         status status_type NOT NULL,
+                         organization_id INTEGER REFERENCES organizations(id),
+                         user_id BIGINT references users(id) NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS  sessions (
+    id BIGSERIAL PRIMARY KEY,
+    user_id BIGINT REFERENCES users(id) NOT NULL,
+    token VARCHAR(36) NOT NULL
+);
+
+
+
+
+
+ALTER TABLE workers DROP CONSTRAINT IF EXISTS workers_coordinates_id_fkey;
+
+
+ALTER TABLE workers
+    ADD CONSTRAINT workers_coordinates_id_fkey
+        FOREIGN KEY (coordinates_id)
+            REFERENCES coordinates (id)
+            ON DELETE CASCADE;
