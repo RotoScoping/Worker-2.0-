@@ -145,7 +145,7 @@ public class WorkerService {
      */
     public String removeById(Integer id, User user) {
         var workers = dao.readAll();
-        for (Worker worker: workers) {
+        for (Worker worker : workers) {
             if (worker.getId() == id) {
                 if (worker.getUserId() == user.getId()) {
                     if (dao.removeById(id)) {
@@ -222,17 +222,12 @@ public class WorkerService {
      *
      * @return string with information about all workers
      */
-    public String show() {
+    public List<Worker> show() {
         var workers = dao.readAll();
-        System.out.println(workers);
-        String s = workers.size() == 0 ? "В коллекции пусто!" :
+        return workers.size() == 0 ? Collections.emptyList() :
                 Arrays.stream(workers.toArray(new Worker[0]))
                         .sorted(Worker::compareTo)
-                        .map(Worker::toString)
-                        .collect(Collectors.joining("\n"));
-        System.out.println(s);
-
-        return s;
+                        .collect(Collectors.toList());
     }
 
     /**

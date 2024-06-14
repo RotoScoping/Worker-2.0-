@@ -5,6 +5,7 @@ import org.example.command.CommandResolver;
 import org.example.command.ICommand;
 import org.example.command.impl.*;
 import org.example.logger.AsyncLogger;
+import org.example.model.Fragment;
 import org.example.model.Message;
 
 import java.io.ByteArrayOutputStream;
@@ -152,7 +153,7 @@ public class Server {
                 logger.log(Level.INFO, String.format("Клиент %s:%d использует команду %s.", clientAddress.getAddress(), clientAddress.getPort(), command.getClass().getSimpleName()));
                 msg = command.execute(buffer);
             }
-            byte[] data = msg.getMessage().getBytes();
+            byte[] data = serialMessage(msg);
             sendResponse(channel, data, clientAddress, msg);
             buffer.clear();
         });
@@ -165,11 +166,9 @@ public class Server {
                 int start = i * PAYLOAD_SIZE;
                 int end = Math.min(data.length, start + PAYLOAD_SIZE);
                 byte[] fragment = Arrays.copyOfRange(data, start, end);
-                msg.setMessage(new String(fragment));
-                msg.setId(i);
-                msg.setTotalPackages(totalPackets);
-                byte[] serializedMessage = serialMessage(msg);
-                ByteBuffer part = ByteBuffer.wrap(serializedMessage);
+                Fragment packet = new Fragment(i, totalPackets, fragment);
+                byte[] serializedFragment = serialFragment(packet);
+                ByteBuffer part = ByteBuffer.wrap(serializedFragment);
 
                 try {
                     channel.send(part, clientAddress);
@@ -190,9 +189,25 @@ public class Server {
             serMess = bis.toByteArray();
 
         } catch (IOException e) {
-            logger.log(Level.INFO, "Ошибка при сериализации");
+            logger.log(Level.SEVERE, "Ошибка при сериализации сообщения: " + e.getMessage());
+            System.out.println(e.getMessage());
         }
         return serMess;
+
+    }
+
+    private byte[] serialFragment(Fragment msg) {
+        byte[] serFrag = new byte[0];
+        try (var bis = new ByteArrayOutputStream();
+             var ois = new ObjectOutputStream(bis)) {
+            ois.writeObject(msg);
+            serFrag = bis.toByteArray();
+
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "Ошибка при сериализации сообщения: " + e.getMessage());
+            System.out.println(e.getMessage());
+        }
+        return serFrag;
 
     }
 

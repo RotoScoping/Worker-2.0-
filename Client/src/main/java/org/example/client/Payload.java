@@ -1,5 +1,8 @@
-package org.example;
+package org.example.client;
 
+import org.example.client.ConsoleHelper;
+import org.example.client.Crypto;
+import org.example.gui.event.*;
 import org.example.logger.AsyncLogger;
 import org.example.model.Form;
 import org.example.model.Worker;
@@ -17,54 +20,53 @@ public class Payload {
 
     private static final AsyncLogger logger = AsyncLogger.get("client");
     private static final int PAYLOAD_SIZE = 4000;
-    private static final Map<String, Integer> commandBit;
-    private final String command;
+    private static final Map<EventType, Integer> commandBit;
+    private final Event event;
     private byte[] payload;
+
+    private static String login;
 
 
     static {
         commandBit = new HashMap<>();
-        commandBit.put("help", 10);
-        commandBit.put("sign_up", 101);
-        commandBit.put("sign_in", 111);
-        commandBit.put("info", 20);
-        commandBit.put("show", 30);
-        commandBit.put("add", 11);
-        commandBit.put("update_id", 21);
-        commandBit.put("remove_by_id", 32);
-        commandBit.put("clear", 40);
-        commandBit.put("remove_first", 60);
-        commandBit.put("add_if_max", 41);
-        commandBit.put("add_if_min", 51);
-        commandBit.put("average_of_salary", 70);
-        commandBit.put("print_field_ascending_status", 80);
-        commandBit.put("print_field_descending_organization", 90);
+        commandBit.put(EventType.HELP, 10);
+        commandBit.put(EventType.REGISTER, 101);
+        commandBit.put(EventType.LOGIN, 111);
+        commandBit.put(EventType.INFO, 20);
+        commandBit.put(EventType.SHOW, 30);
+        commandBit.put(EventType.ADD, 11);
+        commandBit.put(EventType.UPDATE_ID, 21);
+        commandBit.put(EventType.REMOVE_BY_ID, 32);
+        commandBit.put(EventType.CLEAR, 40);
+        commandBit.put(EventType.REMOVE_FIRST, 60);
+        commandBit.put(EventType.ADD_IF_MAX, 41);
+        commandBit.put(EventType.ADD_IF_MIN, 51);
+        commandBit.put(EventType.AVERAGE_OF_SALARY, 70);
+        commandBit.put(EventType.PRINT_FIELD_ASCENDING_STATUS, 80);
+        commandBit.put(EventType.PRINT_FIELD_DESCENDING_ORGANIZATION, 90);
     }
 
 
-    Payload(UUID token , String command) {
-        this.command = command;
+    Payload(UUID token , Event event) {
+        this.event = event;
         loadData(token);
     }
 
     private void loadData(UUID token) {
-        int bit = commandBit.getOrDefault(command, 0);
+
+        int bit = commandBit.getOrDefault(event.getType(), 0);
         byte[] tokenBytes = getTokenBytes(token);
         payload = new byte[PAYLOAD_SIZE];
         payload[0] = (byte) bit;
         System.arraycopy(tokenBytes, 0, payload, 1, tokenBytes.length);
-        byte[] data = switch (bit) {
-            // 11 - add, 21 - update_id , 41 - add_if_max , 51 - add_if_min
-            case 11, 21, 41, 51 -> {
-                int id = 0;
-                if (bit == 21)
-                    id = ConsoleHelper.getId();
-                Worker worker = ConsoleHelper.getWorker();
-                worker.setId(id);
+        byte[] data = switch (event.getType()) {
+            case ADD, UPDATE_ID, ADD_IF_MAX, ADD_IF_MIN -> {
+                AddEvent addEvent = (AddEvent) event;
+
                 byte[] model = new byte[0]; 
                 try (var bis = new ByteArrayOutputStream();
                      var ois = new ObjectOutputStream(bis);) {
-                    ois.writeObject(worker);
+                    ois.writeObject(addEvent.getWorker());
                     model =  bis.toByteArray();
                     System.out.println(model.length);
 
@@ -75,19 +77,20 @@ public class Payload {
 
             }
             // remove_by_id
-            case 32 -> {
-                // [com_bit , byte1, byte2, byte3, byte4]
+            case REMOVE_BY_ID -> {
+                RemoveByIdEvent removeEvent = (RemoveByIdEvent) event;
                 ByteBuffer buffer = ByteBuffer.allocate(4);
-                buffer.putInt(ConsoleHelper.getId());
+                buffer.putInt(removeEvent.getId());
                 yield buffer.array();
             }
 
-            case 101, 111 -> {
-                Form form = bit == 101 ? ConsoleHelper.getRegisterForm() : ConsoleHelper.getEnterForm();
+            case REGISTER, LOGIN-> {
+                AuthEvent authEvent = (AuthEvent) event;
+                login = authEvent.getLogin();
                 byte[] model = new byte[0];
                 try (var bis = new ByteArrayOutputStream();
                      var ois = new ObjectOutputStream(bis);) {
-                    ois.writeObject(Crypto.getEncryptedForm(form));
+                    ois.writeObject(Crypto.getEncryptedForm(authEvent.getForm()));
                     model =  bis.toByteArray();
                 } catch (IOException e) {
                     logger.log(Level.INFO, "Ошибка при соединении");
@@ -99,7 +102,6 @@ public class Payload {
                 ByteBuffer.allocate(0).array();
         };
         System.arraycopy(data, 0, payload, 37, data.length);
-
     }
 
     private byte[] getTokenBytes(UUID token) {
@@ -112,6 +114,10 @@ public class Payload {
 
     public boolean isEmptyPayload() {
         return payload[0] == 0;
+    }
+
+    public static String getLogin() {
+        return login;
     }
 
 

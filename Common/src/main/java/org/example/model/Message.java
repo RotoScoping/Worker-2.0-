@@ -21,6 +21,10 @@ public class Message implements Serializable {
         this(message, null);
     }
 
+    public Message(List<Worker> workers) {
+        this.workers = workers;
+    }
+
     public Message(String message, List<Worker> workers) {
         this.message = message;
         this.workers = workers;

@@ -1,4 +1,4 @@
-package org.example;
+package org.example.client;
 
 import java.io.IOException;
 import java.net.*;

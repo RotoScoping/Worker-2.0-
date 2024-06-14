@@ -1,8 +1,12 @@
-package org.example;
+package org.example.client;
 
+import org.example.gui.event.Event;
+import org.example.gui.event.EventType;
 import org.example.logger.AsyncLogger;
+import org.example.model.Fragment;
 import org.example.model.Message;
 
+import javax.swing.*;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
@@ -12,9 +16,8 @@ import java.nio.channels.Selector;
 import java.util.*;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-public class Client {
+public class Client extends JFrame{
 
     private DatagramChannel channel;
     private final ScriptExecutor script;
@@ -25,10 +28,14 @@ public class Client {
     private Configuration configuration;
     private UUID token;
 
+
+
+
     public Client(Configuration configuration) {
         this.configuration = configuration;
         this.script = new ScriptExecutor();
     }
+
 
     public void run() {
         configuration.tryToConnect();
@@ -43,15 +50,17 @@ public class Client {
             channel.configureBlocking(false);
 
 
+
+/*
             while (true) {
                 String[] commandAndArgs = ConsoleHelper.getCommandAndArgs();
                 if (!validateCommand(commandAndArgs)) continue;
                 if (commandAndArgs[0].equals("exit")) break;
                 sendPacket(commandAndArgs);
             }
+*/
 
-
-            channel.disconnect();
+          /*  channel.disconnect();*/
 
         } catch (IOException e) {
             logger.log(Level.SEVERE, String.format("Ошибка при работе с вводом команд: %s", e.getMessage()));
@@ -61,29 +70,29 @@ public class Client {
         logger.shutdown();
     }
 
-    public void sendPacket(String[] commandAndArgs) {
+    public Message sendPacket(Event event) {
         try {
-            if (commandAndArgs[0].equals("execute_script")) {
-                String result = script.execute(this, commandAndArgs);
+            if (event.getType().equals(EventType.EXECUTE_SCRIPT)) {
+                String result = script.execute(this, event);
                 logger.log(Level.INFO, result);
-                return;
+                return new Message(result);
             }
-            Payload payload = new Payload(token, commandAndArgs[0]);
+            Payload payload = new Payload(token, event);
 
             if (payload.isEmptyPayload()) {
-                logger.log(Level.INFO, String.format("Команда %s не найдена", commandAndArgs[0]));
-                System.out.printf("Команда %s не найдена\n", commandAndArgs[0]);
-                return;
+                logger.log(Level.INFO, String.format("Команда %s не найдена", event.getType().name()));
+                System.out.printf("Команда %s не найдена\n", event.getType().name());
+                return new Message("Команда не найдена");
             }
 
-            logger.log(Level.INFO, String.format("Клиент отправил команду %s на сервер %s:%d", commandAndArgs[0], serverAddress.getAddress()
+            logger.log(Level.INFO, String.format("Клиент отправил команду %s на сервер %s:%d", event.getType().name(), serverAddress.getAddress()
                     .toString(), serverAddress.getPort()));
             ByteBuffer buffer = ByteBuffer.wrap(payload.getData());
             // buffer.clear();
             Selector selector = Selector.open();
             channel.register(selector, SelectionKey.OP_READ);
-            if (!sendPacketWithRetries(selector, buffer, commandAndArgs[0])) {
-                return;
+            if (!sendPacketWithRetries(selector, buffer, event.getType().name())) {
+                return new Message("Сервер недосутпен");
             }
             buffer.clear();
             Set<SelectionKey> selectedKeys = selector.selectedKeys();
@@ -93,19 +102,18 @@ public class Client {
                 if (key.isReadable()) {
                     while (channel.receive(buffer) != null) {
                         buffer.flip();
-                        Message message = deserializeMessage(buffer.array());
-                        int fragmentId = message.getId();
-                        byte[] fragmentData = message.getMessage()
-                                .getBytes();
+                        Fragment fragment = deserializeFragment(buffer.array());
+                        int fragmentId = fragment.getId();
+                        byte[] fragmentData = fragment.getData();
                         fragments.put(fragmentId, fragmentData);
-                        if (fragments.size() == message.getTotalPackages()) {
-                            System.out.println(assemblePackage());
+                        if (fragments.size() == fragment.getTotalPackages()) {
+                            Message message = assemblePackage();
+                            UUID receivedToken = message.getToken();
+                            if (receivedToken != null) {
+                                token = receivedToken;
+                            }
                             fragments.clear();
-                        }
-
-                        UUID receivedToken = message.getToken();
-                        if (receivedToken != null) {
-                            token = receivedToken;
+                            return message;
                         }
                         buffer.clear();
                     }
@@ -116,13 +124,39 @@ public class Client {
         } catch (IOException e) {
             logger.log(Level.SEVERE, String.format("Ошибка при отправке/получении пакета %s", e.getMessage()));
         }
-
+        return new Message("Ошибка сервера");
     }
 
-    private String assemblePackage() {
-       return fragments.values().stream()
-               .map(String::new)
-               .collect(Collectors.joining());
+    private Message assemblePackage() {
+
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            fragments.values()
+                    .forEach(bytes -> {
+                        try {
+                            bos.write((bytes));
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    });
+            byte[] fullMessage = bos.toByteArray();
+            return deserializeMessage(fullMessage);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+
+    private Message deserializeMessage(byte[] bytes) {
+        try (var bis = new ByteArrayInputStream(bytes);
+             var ois = new ObjectInputStream(bis)) {
+            Message msg = (Message) ois.readObject();
+            logger.log(Level.INFO, String.format("Получен объект: %s", msg));
+            return msg;
+        } catch (IOException | ClassNotFoundException e) {
+            logger.log(Level.WARNING, String.format("Ошибка во время десериализации ответа сервера: %s", e.getMessage()));
+        }
+
+        return new Message("Ошбика при чтении ответа сервера!");
     }
 
     private boolean sendPacketWithRetries(Selector selector, ByteBuffer buffer, String command) throws IOException {
@@ -151,17 +185,18 @@ public class Client {
         return true;
     }
 
-    private Message deserializeMessage(byte[] bytes) {
+
+
+    private Fragment deserializeFragment(byte[] bytes) {
         try (var bis = new ByteArrayInputStream(bytes);
              var ois = new ObjectInputStream(bis)) {
-            Message msg = (Message) ois.readObject();
-            logger.log(Level.INFO, String.format("Получен объект: %s", msg));
+            Fragment msg = (Fragment) ois.readObject();
             return msg;
         } catch (IOException | ClassNotFoundException e) {
             logger.log(Level.WARNING, String.format("Ошибка во время десериализации ответа сервера: %s", e.getMessage()));
         }
 
-        return new Message("Ошбика при чтении ответа сервера!");
+        return null;
     }
 
 
@@ -173,5 +208,7 @@ public class Client {
         return true;
     }
 
-
+    public UUID getToken() {
+        return token;
+    }
 }

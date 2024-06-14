@@ -1,4 +1,4 @@
-package org.example;
+package org.example.client;
 
 import org.example.logger.AsyncLogger;
 import org.example.model.Form;

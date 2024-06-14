@@ -1,5 +1,9 @@
-package org.example;
+package org.example.client;
 
+import org.example.client.Client;
+import org.example.gui.event.Event;
+import org.example.gui.event.EventType;
+import org.example.gui.event.ScriptExecutorEvent;
 import org.example.logger.AsyncLogger;
 
 import java.io.*;
@@ -25,11 +29,10 @@ public class ScriptExecutor {
 
     private String currentScript;
 
-    public String execute(Client client, String[] commandAndArgs) {
-        if (commandAndArgs.length < 2) {
-            return "Не был передан путь к скрипту";
-        }
-        File file = new File(commandAndArgs[1]);
+    public String execute(Client client, Event event) {
+
+        ScriptExecutorEvent scriptEvent = (ScriptExecutorEvent) event;
+        File file = new File(scriptEvent.getPath().toUri());
         if (!file.canRead()) {
             return String.format("Нет прав на чтение %s", file.getName());
         }
@@ -40,7 +43,7 @@ public class ScriptExecutor {
             while (reader.ready()) {
                 String[] commandAndArg = reader.readLine()
                         .split(" ");
-                client.sendPacket(commandAndArg);
+                client.sendPacket(new Event(EventType.EXECUTE_SCRIPT));
             }
         } catch (FileNotFoundException e) {
             return String.format("Скрипт %s не найден!" , file.getName());

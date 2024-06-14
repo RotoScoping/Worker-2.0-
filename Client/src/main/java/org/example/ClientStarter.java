@@ -1,8 +1,12 @@
 package org.example;
 
 
+import org.example.client.Client;
+import org.example.client.Configuration;
+import org.example.gui.BaseWindow;
 import org.example.logger.AsyncLogger;
 
+import javax.swing.*;
 import java.util.logging.Level;
 
 public class ClientStarter {
@@ -12,7 +16,14 @@ public class ClientStarter {
         logger.log(Level.INFO, "Начало работы клиента");
         Client client = new Client(new Configuration());
         client.run();
+        SwingUtilities.invokeLater(() -> {
+            BaseWindow clientGUI = new BaseWindow(client);
+            clientGUI.setVisible(true);
+        });
     }
+
+
+
 
 
 
