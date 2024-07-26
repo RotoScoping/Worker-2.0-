@@ -27,15 +27,14 @@ public class SettingsPanel extends JPanel {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
-        // Create and add the current user label
+
         currentUserLabel = new JLabel();
-        currentUserLabel.setAlignmentX(Component.LEFT_ALIGNMENT); // Align to the left
+        currentUserLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
         add(currentUserLabel);
 
-        // Добавляем отступ между компонентами
         add(Box.createVerticalStrut(10));
 
-        // Create and add the language panel
+
         JPanel languagePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         JLabel languageLabel = new JLabel(bundle.getString("chooseLanguage"));
         languagePanel.add(languageLabel);
@@ -85,7 +84,7 @@ public class SettingsPanel extends JPanel {
 
 
     private void updateText() {
-        // Обновляем текст для всех компонентов на основе новой локали
+
         removeAll();
         settingsInit();
         if (currentUsername != null) {

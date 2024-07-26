@@ -66,7 +66,6 @@ public class WorkerService {
         if (msg.size() == 0) {
             worker.setUser(user);
             dao.add(worker);
-            System.out.println("52");
             return "Данные записаны!";
         }
         return String.join("\n", msg);

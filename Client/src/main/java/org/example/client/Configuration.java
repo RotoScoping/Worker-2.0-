@@ -15,7 +15,7 @@ public class Configuration {
     }
 
     public Configuration() {
-        this("127.0.0.1", 35000);
+        this("127.0.0.1", 3500);
     }
 
     public boolean tryToConnect() {

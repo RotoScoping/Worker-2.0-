@@ -15,19 +15,21 @@ public class VisualizationPanel extends JPanel {
     private Map<Long, Color> userColors;
     private Map<Worker, Integer> animationSizes;
     private Timer animationTimer;
+    private MainPanel mainPanel;
 
-    public VisualizationPanel(List<Worker> workers) {
+    public VisualizationPanel(List<Worker> workers, MainPanel mainPanel) {
         this.workers = workers;
+        this.mainPanel = mainPanel;
         this.userColors = new ConcurrentHashMap<>();
         this.animationSizes = new ConcurrentHashMap<>();
 
-        // Генерация случайных цветов для пользователей
+
         for (Worker worker : workers) {
             userColors.putIfAbsent(worker.getUser().getId(), generateRandomColor());
-            animationSizes.put(worker, 20); // Инициализация размера
+            animationSizes.put(worker, 20);
         }
 
-        // Настройка таймера для анимации
+
         animationTimer = new Timer(1000, e -> {
             for (Worker worker : workers) {
                 int currentSize = animationSizes.get(worker);
@@ -37,7 +39,7 @@ public class VisualizationPanel extends JPanel {
         });
         animationTimer.start();
 
-        // Добавление обработчика событий для отображения информации о работнике при нажатии
+
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -47,33 +49,55 @@ public class VisualizationPanel extends JPanel {
                 }
             }
         });
+        setLayout(new FlowLayout());
+
+        JButton addButton = new JButton("+");
+        addButton.setToolTipText("Add Worker");
+        addButton.addActionListener(e -> mainPanel.showAddDialog());
+        add(addButton);
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+
+
+        int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
+
+
+        drawAxes(g, centerX, centerY);
+
         for (Worker worker : workers) {
-            drawWorker(g, worker);
+            drawWorker(g, worker, centerX, centerY);
         }
     }
 
-    private void drawWorker(Graphics g, Worker worker) {
+    private void drawAxes(Graphics g, int centerX, int centerY) {
+        g.setColor(Color.BLACK);
+        g.drawLine(0, centerY, getWidth(), centerY);
+        g.drawLine(centerX, 0, centerX, getHeight());
+    }
+
+    private void drawWorker(Graphics g, Worker worker, int centerX, int centerY) {
         Color color = userColors.get(worker.getUser().getId());
         g.setColor(color);
-        int x = worker.getCoordinates().getX().intValue();
-        int y = worker.getCoordinates().getY().intValue();
-        int size = animationSizes.get(worker); // Использование анимированного размера
+        int x = centerX + worker.getCoordinates().getX().intValue();
+        int y = centerY - worker.getCoordinates().getY().intValue();
+        int size = animationSizes.get(worker);
 
-        // Отрисовка объекта
-        g.fillOval(x, y, size, size);
+        g.fillOval(x - size / 2, y - size / 2, size, size);
     }
 
     private Worker getWorkerAtPoint(Point point) {
+        int centerX = getWidth() / 2;
+        int centerY = getHeight() / 2;
+
         for (Worker worker : workers) {
-            int x = worker.getCoordinates().getX().intValue();
-            int y = worker.getCoordinates().getY().intValue();
+            int x = centerX + worker.getCoordinates().getX().intValue();
+            int y = centerY - worker.getCoordinates().getY().intValue();
             int size = animationSizes.get(worker);
-            Rectangle rect = new Rectangle(x, y, size, size);
+            Rectangle rect = new Rectangle(x - size / 2, y - size / 2, size, size);
             if (rect.contains(point)) {
                 return worker;
             }
@@ -82,7 +106,32 @@ public class VisualizationPanel extends JPanel {
     }
 
     private void showWorkerInfo(Worker worker) {
-        JOptionPane.showMessageDialog(this, worker.toString(), "Worker Info", JOptionPane.INFORMATION_MESSAGE);
+        JPanel panel = new JPanel(new GridLayout(0, 2));
+        panel.add(new JLabel("Name:"));
+        panel.add(new JLabel(worker.getName()));
+        panel.add(new JLabel("Coordinates:"));
+        panel.add(new JLabel(worker.getCoordinates().toString()));
+        panel.add(new JLabel("Salary:"));
+        panel.add(new JLabel(String.valueOf(worker.getSalary())));
+        panel.add(new JLabel("Start Date:"));
+        panel.add(new JLabel(worker.getStartDate().toString()));
+        panel.add(new JLabel("Position:"));
+        panel.add(new JLabel(worker.getPosition().toString()));
+        panel.add(new JLabel("Status:"));
+        panel.add(new JLabel(worker.getStatus().toString()));
+        panel.add(new JLabel("Organization:"));
+        panel.add(new JLabel(worker.getOrganization() != null ? worker.getOrganization().getFullName() : ""));
+
+        int result = JOptionPane.showOptionDialog(
+                this, panel, "Worker Info",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                null, new Object[]{"Update", "Delete", "Close"}, null);
+
+        if (result == 0) {
+            mainPanel.showUpdateDialog(worker);
+        } else if (result == 1) {
+            mainPanel.deleteWorker(worker);
+        }
     }
 
     public void updateWorkers(List<Worker> newWorkers) {

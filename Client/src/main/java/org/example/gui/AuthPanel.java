@@ -31,20 +31,16 @@ public class AuthPanel extends JPanel {
     public AuthPanel(Client clientGUI, BaseWindow main) {
         this.mainWindow = main;
         this.clientGUI = clientGUI;
-        this.isRegisterMode = false; // Start with login mode
+        this.isRegisterMode = false;
         setBorder(BorderFactory.createLineBorder(new Color(95, 184, 50), 15)); // Add orange border
         setLayout(new GridBagLayout());
-        setBackground(new Color(255, 255, 255)); // Set background color
+        setBackground(new Color(255, 255, 255));
         GridBagConstraints gbc = new GridBagConstraints();
-
-        // Container panel with green border
         JPanel containerPanel = new JPanel();
         containerPanel.setLayout(new GridBagLayout());
         containerPanel.setBackground(new Color(255, 255, 255));
         containerPanel.setBorder(BorderFactory.createLineBorder(new Color(95, 184, 50), 5));
         GridBagConstraints containerGbc = new GridBagConstraints();
-
-        // Title panel
         JPanel titlePanel = new JPanel();
         titleLabel = new JLabel("<html><h1 style='color:white'>Login Form</h1></html>");
         titlePanel.setBackground(new Color(95, 184, 50));
@@ -90,9 +86,8 @@ public class AuthPanel extends JPanel {
         containerGbc.gridwidth = 2;
         containerGbc.fill = GridBagConstraints.CENTER;
 
-        // Button panel (добавляем в него JButton)
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setBackground(new Color(79, 149, 45)); // Match background
+        buttonPanel.setBackground(new Color(79, 149, 45));
         loginButton = new JButton("Login");
         loginButton.setBackground(new Color(95, 184, 50));
         loginButton.setForeground(Color.WHITE);
@@ -149,7 +144,6 @@ public class AuthPanel extends JPanel {
         } else {
             AuthEvent authEvent = new AuthEvent(EventType.LOGIN, new Form(username, password));
             Message message = clientGUI.sendPacket(authEvent);
-            clientGUI.sendPacket(authEvent);
             if (message.getToken() != null) {
                 Message workersMessage = clientGUI.sendPacket(new Event(EventType.SHOW)); // Запрос данных после авторизации
                 MainPanel mainPanel = mainWindow.switchToMainPanel(workersMessage.getWorkers());

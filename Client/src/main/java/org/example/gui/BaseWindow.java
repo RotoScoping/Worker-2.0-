@@ -33,7 +33,7 @@ public class BaseWindow extends JFrame {
 
     private void setup() {
         setTitle("Worker");
-        setSize(800, 600);
+        setSize(950, 750);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setResizable(false);
     }

@@ -16,6 +16,7 @@ public class ClientStarter {
         logger.log(Level.INFO, "Начало работы клиента");
         Client client = new Client(new Configuration());
         client.run();
+
         SwingUtilities.invokeLater(() -> {
             BaseWindow clientGUI = new BaseWindow(client);
             clientGUI.setVisible(true);
